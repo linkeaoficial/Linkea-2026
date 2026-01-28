@@ -145,7 +145,7 @@ textarea.form-input { resize: vertical; height: 150px; }
 .hero-socials { display: flex; gap: 1.2rem; z-index: 100; }
 .hero-icon { width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(60, 119, 252, 0.2); display: flex; align-items: center; justify-content: center; color: var(--primary); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); transition: all 0.4s ease; }
 .hero-icon:hover { background: var(--accent-gradient); color: white; transform: translateY(-3px); }
-@media (min-width: 969px) { .hero-socials { position: fixed; right: 25px; top: 50%; transform: translateY(-50%); flex-direction: column; } .testimonials-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; align-items: stretch; margin-top: 80px; } #testimonios { padding-top: 40px; } }
+@media (min-width: 969px) { .hero-socials { position: fixed; right: 25px; top: 50%; transform: translateY(-50%); flex-direction: column; } .testimonials-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; align-items: stretch; margin-top: 100px; } #testimonios { padding-top: 40px; } }
 
 /* --- Responsive Móvil / Tablet --- */
 @media (max-width: 968px) { .hero-title { font-size: 3rem; } .contact-container { grid-template-columns: 1fr; } .contact-form { padding: 3rem 1.5rem; } .footer-grid { grid-template-columns: 1fr; gap: 2rem; } .testimonials-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding: 1rem 0 2rem 0; align-items: stretch; gap: 1.5rem; } .testimonial-card { flex: 0 0 300px; scroll-snap-align: center; height: auto; } .hero-socials { position: static; margin-top: 2.5rem; justify-content: center; width: 100%; } .hero { align-items: flex-start !important; padding-top: 130px; } .hero-icon { width: 44px; height: 44px; } .payment-methods { opacity: 1; filter: grayscale(0); } } #servicios { padding: 60px 0 !important; }
@@ -165,3 +165,5 @@ textarea.form-input { resize: vertical; height: 150px; }
 
 /* Ajuste para móviles */
 @media (max-width: 768px) { .scroll-top-btn { width: 44px; height: 44px; bottom: 20px; left: 20px; } }
+
+@media (min-width: 969px) { #testimonios .section-title { margin-bottom: 6rem !important; } #contacto { padding-top: 100px !important; } }
