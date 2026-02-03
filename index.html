@@ -396,6 +396,29 @@
     </svg>
 </button>
 
+    <script>
+    // Carga asíncrona del chatbot premium
+    fetch('LinkeaBot.html')
+    .then(res => {
+        if (!res.ok) throw new Error("Error loading bot");
+        return res.text();
+    })
+    .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        // 1. Inyectar Estilos y Fuentes
+        const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
+        styles.forEach(style => document.head.appendChild(style));
+        // 2. Inyectar Estructura HTML
+        const botContainer = doc.querySelector('.chatbot-container');
+        if (botContainer) document.body.appendChild(botContainer);
+        // 3. Ejecutar Script del Bot (usando eval para alcance global)
+        const scriptTag = doc.querySelector('script');
+        if (scriptTag) { eval(scriptTag.textContent); }
+    })
+    .catch(err => console.error("LinkeaBot Error:", err));
+</script>
+
     <script src="script.js"></script>
 </body>
 </html>

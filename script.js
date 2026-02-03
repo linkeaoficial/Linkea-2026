@@ -121,3 +121,28 @@ window.addEventListener('scroll', () => {
 scrollTopBtn.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
+// --- Lógica de envío a WhatsApp ---
+const contactForm = document.querySelector('.contact-form');
+
+contactForm.addEventListener('submit', (e) => {
+    e.preventDefault(); // Evita que la página se recargue
+
+    // Capturar los datos de los campos
+    const nombre = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const servicio = document.getElementById('hiddenServiceInput').value;
+    const mensaje = document.getElementById('message').value;
+
+    // Tu número de teléfono (ya lo tienes en el HTML)
+    const telefono = "584162779279";
+
+    // Construir el mensaje formateado
+    const textoWhatsApp = `Hola Linkea, mi nombre es *${nombre}* (%0A📧 ${email})%0A%0AEstoy interesado en el servicio: *${servicio}*%0A%0A*Detalles del proyecto:*%0A${mensaje}`;
+
+    // Crear la URL de WhatsApp
+    const url = `https://wa.me/${telefono}?text=${textoWhatsApp}`;
+
+    // Abrir en una nueva ventana/pestaña
+    window.open(url, '_blank');
+});

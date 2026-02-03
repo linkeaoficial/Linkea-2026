@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkeaBot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- ESTILOS PREMIUM LINKEA BOT --- */
+        :root {
+            --lbot-primary: #3C77FC; /* Azul Linkea */
+            --lbot-accent: #7545FD; /* Morado Linkea */
+            --lbot-gradient: linear-gradient(135deg, var(--lbot-primary), var(--lbot-accent));
+            --lbot-bg-light: #F8FAFC; /* Fondo muy claro */
+            --lbot-card-bg: #FFFFFF;
+            --lbot-text-dark: #1E293B;
+            --lbot-text-gray: #64748B;
+            --lbot-shadow: 0 10px 30px -5px rgba(60, 119, 252, 0.15), 0 4px 10px -3px rgba(0,0,0,0.05);
+            --lbot-font: 'Inter', sans-serif;
+        }
+
+        /* Reset rápido para el componente */
+        .chatbot-container * { box-sizing: border-box; font-family: var(--lbot-font); }
+
+        /* --- BOTÓN FLOTANTE (Toggler) --- */
+        .chatbot-toggler {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 64px;
+            height: 64px;
+            border: none;
+            border-radius: 24px; /* Más cuadrado, más moderno */
+            background: var(--lbot-gradient);
+            box-shadow: 0 8px 20px rgba(60, 119, 252, 0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 9999;
+        }
+        .chatbot-toggler:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(60, 119, 252, 0.4); }
+
+
+        /* --- NUEVA ANIMACIÓN PARA ICONOS CON SPAN --- */
+.chatbot-toggler span { 
+    color: white; 
+    position: absolute; 
+    transition: all 0.3s ease; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+}
+
+/* Ocultar flecha al inicio y burbuja al abrir */
+.chatbot-toggler span:last-child, 
+body.show-chatbot .chatbot-toggler span:first-child { 
+    opacity: 0; 
+    transform: rotate(90deg) scale(0.5); 
+}
+
+/* Mostrar flecha al abrir el chat */
+body.show-chatbot .chatbot-toggler span:last-child { 
+    opacity: 1; 
+    transform: rotate(0deg) scale(1); 
+}
+
+        /* --- CONTENEDOR PRINCIPAL --- */
+        .chatbot {
+            position: fixed;
+            right: 30px;
+            bottom: 110px;
+            width: 400px; /* Un poco más ancho para mejor diseño */
+            height: 600px;
+            max-height: 80vh;
+            background: var(--lbot-bg-light);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px) scale(0.95);
+            transform-origin: bottom right;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+        }
+        body.show-chatbot .chatbot { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+
+        /* --- HEADER --- */
+        .chatbot header {
+            background: var(--lbot-card-bg);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .header-icon-wrap {
+            width: 48px; height: 48px;
+            background: var(--lbot-gradient);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            color: white;
+            box-shadow: 0 4px 10px rgba(60, 119, 252, 0.2);
+        }
+        .header-info h2 { font-size: 1.1rem; font-weight: 700; color: var(--lbot-text-dark); margin: 0; }
+        .header-info p { font-size: 0.85rem; color: var(--lbot-text-gray); margin: 2px 0 0 0; display: flex; align-items: center; gap: 6px;}
+        .status-dot { width: 8px; height: 8px; background: #10B981; border-radius: 50%; display: inline-block; position: relative; z-index: 1; } .status-dot::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: inherit; border-radius: 50%; z-index: -1; animation: pulseStatus 2s infinite; } @keyframes pulseStatus { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3); opacity: 0; } }
+        .close-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; cursor: pointer; color: var(--lbot-text-gray); transition: 0.2s; border-radius: 50%; } .close-btn:hover { color: var(--lbot-text-dark); background: rgba(0,0,0,0.05); }
+
+        /* --- ÁREA DE CHAT (Chatbox) --- */
+        .chatbox {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+        .chatbox::-webkit-scrollbar { width: 5px; }
+        .chatbox::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* Mensajes del Bot */
+        .chat-incoming { display: flex; align-items: flex-start; gap: 12px; animation: fadeUp 0.4s ease forwards; }
+        .bot-avatar-small {
+            width: 36px; height: 36px;
+            background: var(--lbot-gradient);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; flex-shrink: 0;
+        }
+        .bot-message-content {
+            background: var(--lbot-card-bg);
+            padding: 16px 20px;
+            border-radius: 0 18px 18px 18px;
+            box-shadow: var(--lbot-shadow);
+            color: var(--lbot-text-dark);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        .bot-message-content strong { color: var(--lbot-primary); font-weight: 600; }
+
+        /* Indicador de Escribiendo... (Typing) */
+        .typing-indicator {
+            display: flex; gap: 4px; padding: 8px 12px;
+            background: var(--lbot-card-bg); border-radius: 18px;
+            box-shadow: var(--lbot-shadow); width: fit-content;
+            margin-left: 48px; /* Alineado con el mensaje */
+            animation: fadeUp 0.3s ease forwards;
+        }
+        .typing-dot { width: 8px; height: 8px; background: var(--lbot-text-gray); border-radius: 50%; animation: typingAnimation 1.4s infinite ease-in-out both; opacity: 0.7; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        /* --- TARJETAS DE OPCIONES (Premium Options) --- */
+        .options-container {
+            display: flex; flex-direction: column; gap: 10px;
+            margin-top: 5px; margin-left: 48px; /* Indentado */
+            animation: fadeUp 0.5s ease forwards 0.2s; opacity: 0;
+        }
+        .option-card {
+            display: flex; align-items: center; gap: 14px;
+            background: var(--lbot-card-bg);
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.04);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-align: left; width: 100%;
+        }
+        .option-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(60, 119, 252, 0.12);
+            border-color: rgba(60, 119, 252, 0.3);
+        }
+        .option-icon-wrap {
+            width: 40px; height: 40px;
+            background: rgba(60, 119, 252, 0.08);
+            color: var(--lbot-primary);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s; flex-shrink: 0;
+        }
+        .option-card:hover .option-icon-wrap { background: var(--lbot-primary); color: white; }
+        .option-text { font-weight: 600; font-size: 0.95rem; color: var(--lbot-text-dark); flex: 1; }
+        .option-arrow { color: var(--lbot-text-gray); opacity: 0.5; transition: 0.3s; }
+        .option-card:hover .option-arrow { opacity: 1; transform: translateX(4px); color: var(--lbot-primary); }
+
+        /* Estados de opciones (Deshabilitado/Seleccionado) */
+        .options-container.disabled { pointer-events: none; }
+        .option-card.disabled-card { opacity: 0.5; transform: none; box-shadow: none; }
+        .option-card.selected-card { background: var(--lbot-text-dark); color: white; transform: scale(0.98); }
+        .option-card.selected-card .option-text { color: white; }
+        .option-card.selected-card .option-icon-wrap { background: rgba(255,255,255,0.2); color: white; }
+        .option-card.selected-card .option-arrow { color: white; opacity: 1; }
+
+        /* --- ANIMACIONES --- */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes typingAnimation { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 480px) {
+            .chatbot { width: 100%; height: 100%; right: 0; bottom: 0; border-radius: 0; max-height: none; }
+            .chatbot header { padding-top: 15px; }
+            .chatbot-toggler { bottom: 20px; right: 20px; }
+        }
+
+        
+    </style>
+</head>
+<body>
+    <div class="chatbot-container">
+        
+        <button class="chatbot-toggler" id="botToggler">
+    <span class="material-symbols-outlined">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </span>
+    <span class="material-symbols-outlined">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </span>
+</button>
+
+        <div class="chatbot">
+            <header>
+    <div class="header-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg>
+    </div>
+    <div class="header-info">
+        <h2>Asistente Linkea</h2>
+        <p><span class="status-dot"></span>En línea ahora</p>
+    </div>
+    
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+    <span class="close-btn" id="resetBotBtn" title="Reiniciar Chat">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+            <polyline points="21 3 21 8 16 8"/>
+        </svg>
+    </span>
+    <span class="close-btn" id="closeBotBtn" title="Cerrar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+        </svg>
+    </span>
+</div>
+</header>
+
+            <div class="chatbox" id="chatbox">
+                <div class="chat-incoming">
+                    <div class="bot-avatar-small">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9z"/><path d="M8 14h8"/><path d="M8 18h8"/></svg>
+                    </div>
+                    <div class="bot-message-content">
+                        <p>¡Hola! 👋 Bienvenido al sistema inteligente de Linkea. Soy tu copiloto técnico.</p>
+                    </div>
+                </div>
+                 </div>
+        </div>
+    </div>
+
+    <script>
+        // Usamos un IIFE para encapsular el script y evitar conflictos
+        (function() {
+            // --- DATA: Iconos SVG (Estilo Monoline Profesional) ---
+            const icons = {
+                rocket: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-7 24 24 0 0 1 7-2c-.4.38-4 1.5-6 3.5s-5 6-5 6Z"/><path d="M15 9 9 15"/><path d="M5 20l3.5-3.5"/></svg>',
+                support: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v6l-4-3z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>',
+                team: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+                store: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>',
+                bio: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+                landing: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+                corp: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>',
+                back: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5"/><path d="M18 17l-5-5 5-5"/></svg>',
+                check: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+                arrowRight: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
+            };
+
+            // --- DATA: Flujo del Chat (Árbol de decisiones) ---
+            const botFlow = {
+                start: {
+                    text: "¿En qué podemos ayudarte a potenciar tu negocio hoy?",
+                    options: [
+                        { label: "Ver Planes y Servicios", icon: icons.rocket, next: "plans_menu" },
+                        { label: "Hablar con Soporte", icon: icons.support, next: "support" },
+                        { label: "Conocer Linkea", icon: icons.team, next: "about" }
+                    ]
+                },
+                plans_menu: {
+                    text: "Excelente. Tenemos 4 soluciones de alto impacto. Selecciona una para ver detalles:",
+                    options: [
+                        { label: "Tienda Online WhatsApp", icon: icons.store, next: "plan_store", tag: "Top Ventas" },
+                        { label: "Web Corporativa", icon: icons.corp, next: "plan_corp" },
+                        { label: "Landing Page High Impact", icon: icons.landing, next: "plan_landing" },
+                        { label: "Páginas De Enlaces", icon: icons.bio, next: "plan_bio" },
+                        { label: "Volver al inicio", icon: icons.back, next: "start" }
+                    ]
+                },
+                // --- DETALLES TIENDA WHATSAPP ---
+                plan_store: {
+                    text: "🛒 **Tienda Online WhatsApp**\nLa herramienta definitiva para vender sin fricción.\n\n<span style='color: #3C77FC;'>◉</span> Carrito Persistente (no se borra)\n<span style='color: #3C77FC;'>◉</span> Pedido One-Click directo a tu chat\n<span style='color: #3C77FC;'>◉</span> Integración con WhatsApp\n\n💰 **Inversión según inventario:**\n• Hasta 30 Prod: $380\n• Hasta 50 Prod: **$550** (Recomendado)\n• 100+ Prod: $850+ (Incluye panel)",
+                    options: [
+                        { label: "Quiero esta Tienda", icon: icons.check, action: "whatsapp", msg: "Hola Linkea, estoy listo para mi Tienda Online WhatsApp." },
+                        { label: "Ver otras opciones", icon: icons.back, next: "plans_menu" }
+                    ]
+                },
+                // --- DETALLES PÁGINA DE ENLACES (BIO LINKS) ---
+                plan_bio: {
+                    text: "🔗 **Bio Links: Tu Tarjeta Digital Premium**\nCentraliza toda tu presencia. Mucho más que un Linktree.\n\n<span style='color: #3C77FC;'>◉</span> **Plan Start ($60):** Diseño custom, 6 enlaces, subdominio rápido.\n<span style='color: #3C77FC;'>◉</span> **Plan Pro ($110):** Dominio propio (.com), enlaces ilimitados, animaciones y galería.",
+                    options: [
+                        { label: "Elegir Plan Start ($60)", icon: icons.bio, action: "whatsapp", msg: "Hola, me interesa el Plan Bio Links Start ($60)" },
+                        { label: "Elegir Plan Pro ($110)", icon: icons.rocket, action: "whatsapp", msg: "Hola, quiero proyectar autoridad con el Plan Bio Links Pro ($110)" },
+                        { label: "Regresar", icon: icons.back, next: "plans_menu" }
+                    ]
+                },
+                // --- DETALLES LANDING ---
+                plan_landing: {
+                    text: "🚀 **Landing Page 'High Impact'**\nDiseñada con psicología de ventas para un efecto WOW.\n\n💰 **Inversión Única: $350 USD**\n\"Incluye:\n<span style='color: #3C77FC;'>◉</span> Estructura de Storytelling\n<span style='color: #3C77FC;'>◉</span> Animaciones Premium\n<span style='color: #3C77FC;'>◉</span> Chatbot Menú integrado\n<span style='color: #3C77FC;'>◉</span> Copywriting estratégico",
+                    options: [
+                        { label: "Quiero una Landing así", icon: icons.landing, action: "whatsapp", msg: "Hola, quiero una Landing Page High Impact para mi producto ($350)" },
+                        { label: "Regresar al menú", icon: icons.back, next: "plans_menu" }
+                    ]
+                },
+                // --- DETALLES CORPORATIVA ---
+                plan_corp: {
+                    text: "🏢 **Web Corporativa Profesional**\nTransmite confianza y seriedad absoluta. Ideal para Clínicas, Constructoras y Agencias.\n\n💰 **Inversión: $450 USD**\n\nIncluye:\n<span style='color: #3C77FC;'>◉</span> SEO On-Page\n<span style='color: #3C77FC;'>◉</span> Portafolio Profesional\n<span style='color: #3C77FC;'>◉</span> Mapa Interactivo\n<span style='color: #3C77FC;'>◉</span> Sección de Contacto Avanzada",
+                    options: [
+                        { label: "Cotizar mi Web Corporativa", icon: icons.corp, action: "whatsapp", msg: "Hola, necesito una Web Corporativa profesional ($450)" },
+                        { label: "Ver otros planes", icon: icons.back, next: "plans_menu" }
+                    ]
+                },
+                support: {
+                    text: "Nuestros ingenieros están disponibles de 7:00 AM a 11:00 PM. ¿Prefieres conexión directa?",
+                    options: [
+                        { label: "Abrir chat de Soporte", icon: icons.support, action: "whatsapp", msg: "Hola Soporte Linkea, tengo una consulta técnica." },
+                        { label: "Volver al inicio", icon: icons.back, next: "start" }
+                    ]
+                },
+                about: {
+                    text: "**Somos Linkea.** Más que una agencia, somos tus aliados técnicos. Creamos infraestructura digital ultra rápida enfocada en resultados, no solo en estética.",
+                    options: [
+                        { label: "Ver lo que hacemos", icon: icons.rocket, next: "plans_menu" },
+                        { label: "Volver", icon: icons.back, next: "start" }
+                    ]
+                }
+            };
+
+            // --- Lógica del Chat (Core) ---
+            setTimeout(() => { // Asegurar carga del DOM
+                const chatbox = document.getElementById("chatbox");
+                const toggler = document.getElementById("botToggler");
+                const closeBtn = document.getElementById("closeBotBtn");
+                const body = document.body;
+
+                if(!chatbox || !toggler) return;
+
+                // Iniciar flujo
+                setTimeout(() => processStep(botFlow.start), 600); // Pequeña pausa inicial
+
+                // Eventos Toggle
+                toggler.addEventListener("click", () => body.classList.toggle("show-chatbot"));
+                closeBtn.addEventListener("click", () => body.classList.remove("show-chatbot"));
+
+                // Función principal para procesar un paso del flujo
+                function processStep(stepData) {
+                    showTypingIndicator();
+                    setTimeout(() => {
+                        removeTypingIndicator();
+                        appendBotMessage(stepData.text);
+                        if (stepData.options) {
+                            renderOptions(stepData.options);
+                        }
+                        scrollToBottom();
+                    }, 1500); // Tiempo de "escribiendo..."
+                }
+
+
+                // Mostrar indicador "Escribiendo..."
+                function showTypingIndicator() {
+                    const typingDiv = document.createElement("div");
+                    typingDiv.classList.add("typing-indicator");
+                    typingDiv.id = "typing-indicator";
+                    typingDiv.innerHTML = `<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>`;
+                    chatbox.appendChild(typingDiv);
+                    scrollToBottom();
+                }
+
+                 // Remover indicador
+                function removeTypingIndicator() {
+                    const typingDiv = document.getElementById("typing-indicator");
+                    if(typingDiv) typingDiv.remove();
+                }
+
+                // Agregar mensaje del Bot (Burbuja)
+                function appendBotMessage(message) {
+                    const div = document.createElement("div");
+                    div.classList.add("chat-incoming");
+                     // Formateo simple de Markdown (**negrita** y saltos de linea)
+                    let formattedMsg = message.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+                    
+                    div.innerHTML = `
+                        <div class="bot-avatar-small">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9z"/><path d="M8 14h8"/><path d="M8 18h8"/></svg>
+                        </div>
+                        <div class="bot-message-content"><p>${formattedMsg}</p></div>
+                    `;
+                    chatbox.appendChild(div);
+                }
+
+                // Renderizar Tarjetas de Opciones (Premium Cards)
+                function renderOptions(options) {
+                    const container = document.createElement("div");
+                    container.classList.add("options-container");
+
+                    options.forEach(opt => {
+                        const card = document.createElement("button");
+                        card.classList.add("option-card");
+                        // Estructura de la tarjeta premium
+                        card.innerHTML = `
+                            <div class="option-icon-wrap">${opt.icon}</div>
+                            <span class="option-text">${opt.label}</span>
+                            <div class="option-arrow">${icons.arrowRight}</div>
+                        `;
+                        card.onclick = () => handleCardClick(opt, card, container);
+                        container.appendChild(card);
+                    });
+                    chatbox.appendChild(container);
+                    scrollToBottom();
+                }
+
+                // Manejar clic en tarjeta
+                function handleCardClick(option, cardElement, container) {
+                    // Efecto visual de selección
+                    container.classList.add("disabled"); // Bloquear contenedor
+                    Array.from(container.children).forEach(c => c.classList.add("disabled-card"));
+                    cardElement.classList.remove("disabled-card");
+                    cardElement.classList.add("selected-card");
+
+                    // Acción: WhatsApp
+                    if (option.action === "whatsapp") {
+                        setTimeout(() => {
+                             const phone = "584162779279";
+                             const url = `https://wa.me/${phone}?text=${encodeURIComponent(option.msg)}`;
+                             window.open(url, '_blank');
+                             // Opcional: Reiniciar chat después de un tiempo
+                             // setTimeout(() => { chatbox.innerHTML = ''; processStep(botFlow.start); }, 3000);
+                        }, 500);
+                        return;
+                    }
+
+                    // Acción: Siguiente paso
+                    if (option.next && botFlow[option.next]) {
+                        processStep(botFlow[option.next]);
+                    }
+                }
+
+                function scrollToBottom() {
+                    chatbox.scrollTo({ top: chatbox.scrollHeight, behavior: 'smooth' });
+                }
+
+                const resetBtn = document.getElementById("resetBotBtn");
+                if (resetBtn) {
+                    resetBtn.addEventListener("click", () => {
+                        chatbox.innerHTML = ''; // Limpia todo
+                        // Pequeña pausa para que se vea natural el reinicio
+                        setTimeout(() => {
+                            processStep(botFlow.start);
+                        }, 300);
+                    });
+                }
+
+            }, 200); // Fin setTimeout inicial
+        })(); // Fin IIFE
+
+    </script>
+</body>
+</html>
