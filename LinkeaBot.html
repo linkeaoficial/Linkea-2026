@@ -8,40 +8,100 @@
     <style>
         /* --- ESTILOS PREMIUM LINKEA BOT --- */
         :root {
-            --lbot-primary: #3C77FC; /* Azul Linkea */
-            --lbot-accent: #7545FD; /* Morado Linkea */
+            --lbot-primary: #3C77FC;
+            --lbot-accent: #7545FD;
             --lbot-gradient: linear-gradient(135deg, var(--lbot-primary), var(--lbot-accent));
-            --lbot-bg-light: #F8FAFC; /* Fondo muy claro */
+            --lbot-bg-light: #F8FAFC;
             --lbot-card-bg: #FFFFFF;
             --lbot-text-dark: #1E293B;
             --lbot-text-gray: #64748B;
             --lbot-shadow: 0 10px 30px -5px rgba(60, 119, 252, 0.15), 0 4px 10px -3px rgba(0,0,0,0.05);
             --lbot-font: 'Inter', sans-serif;
+            --lbot-border: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Sincronización automática con Modo Oscuro de la web */
+        body.dark-mode {
+            --lbot-bg-light: #0f172a;
+            --lbot-card-bg: #1e293b;
+            --lbot-text-dark: #f1f5f9;
+            --lbot-text-gray: #94a3b8;
+            --lbot-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            --lbot-border: rgba(255, 255, 255, 0.1);
         }
 
         /* Reset rápido para el componente */
         .chatbot-container * { box-sizing: border-box; font-family: var(--lbot-font); }
 
         /* --- BOTÓN FLOTANTE (Toggler) --- */
-        .chatbot-toggler {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 64px;
-            height: 64px;
-            border: none;
-            border-radius: 24px; /* Más cuadrado, más moderno */
-            background: var(--lbot-gradient);
-            box-shadow: 0 8px 20px rgba(60, 119, 252, 0.3);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 9999;
-        }
-        .chatbot-toggler:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(60, 119, 252, 0.4); }
 
+        .chatbot-toggler { 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            width: 64px; 
+            height: 64px; 
+            border: none; 
+            border-radius: 24px; 
+            background: var(--lbot-gradient); 
+            box-shadow: 0 8px 20px rgba(60, 119, 252, 0.3); 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            z-index: 9999; 
+            
+            /* ESTADO INICIAL: OCULTO */
+            opacity: 0; 
+            transform: scale(0.5) translateY(40px); 
+            pointer-events: none; /* No se puede clicar si no se ve */
+        }
+
+        /* CLASE PARA MOSTRAR EL BOTÓN (Se agrega con JS al hacer scroll) */
+        .chatbot-toggler.show-bot {
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: auto; /* Reactivamos el clic */
+        }
+
+        /* Efecto Hover (Brillo y Escala) */
+        .chatbot-toggler:hover { 
+            transform: translateY(-5px) scale(1.05) !important; /* !important para sobrescribir la animación */
+            box-shadow: 0 15px 35px rgba(60, 119, 252, 0.5); 
+            filter: brightness(1.15); 
+        }
+
+        @keyframes popIn { 
+            0% { opacity: 0; transform: scale(0.5) translateY(40px); } 
+            70% { transform: scale(1.1) translateY(-5px); } 
+            100% { opacity: 1; transform: scale(1) translateY(0); } 
+        }
+
+        /* Efecto de Pulso (Corregido a la forma del botón) */
+        .chatbot-toggler::after {
+            content: ''; 
+            position: absolute; 
+            top: -5px; left: -5px; right: -5px; bottom: -5px;
+            /* AQUÍ ESTÁ EL CAMBIO: Usamos 30px para que sea concéntrico al botón de 24px */
+            border-radius: 30px; 
+            border: 2px solid rgba(60, 119, 252, 0.3);
+            opacity: 0; 
+            z-index: -1; 
+            animation: pulseGlow 2s infinite;
+        }
+        
+        /* Animación del Pulso */
+        @keyframes pulseGlow { 
+            0% { transform: scale(0.9); opacity: 0.6; } 
+            100% { transform: scale(1.3); opacity: 0; } 
+        }
+
+        /* Efecto Brillante al pasar el mouse (El que te gustó) */
+        .chatbot-toggler:hover { 
+            transform: translateY(-5px) scale(1.05); 
+            box-shadow: 0 15px 35px rgba(60, 119, 252, 0.5); 
+            filter: brightness(1.15); 
+        }
 
         /* --- NUEVA ANIMACIÓN PARA ICONOS CON SPAN --- */
 .chatbot-toggler span { 
@@ -168,7 +228,7 @@ body.show-chatbot .chatbot-toggler span:last-child {
             background: var(--lbot-card-bg);
             padding: 14px 18px;
             border-radius: 16px;
-            border: 1px solid rgba(0,0,0,0.04);
+            border: 1px solid var(--lbot-border);
             box-shadow: 0 2px 8px rgba(0,0,0,0.03);
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -195,10 +255,11 @@ body.show-chatbot .chatbot-toggler span:last-child {
         /* Estados de opciones (Deshabilitado/Seleccionado) */
         .options-container.disabled { pointer-events: none; }
         .option-card.disabled-card { opacity: 0.5; transform: none; box-shadow: none; }
-        .option-card.selected-card { background: var(--lbot-text-dark); color: white; transform: scale(0.98); }
-        .option-card.selected-card .option-text { color: white; }
-        .option-card.selected-card .option-icon-wrap { background: rgba(255,255,255,0.2); color: white; }
-        .option-card.selected-card .option-arrow { color: white; opacity: 1; }
+        .option-card.selected-card { background: #1E293B !important; color: #FFFFFF !important; transform: scale(0.98); border-color: transparent; }
+        .option-card.selected-card .option-text { color: #FFFFFF !important; }
+        .option-card.selected-card .option-icon-wrap { background: rgba(255,255,255,0.2) !important; color: #FFFFFF !important; }
+        .option-card.selected-card .option-arrow { color: #FFFFFF !important; opacity: 1; }
+        body.dark-mode .option-card.selected-card { background: var(--lbot-primary) !important; }
 
         /* --- ANIMACIONES --- */
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -229,7 +290,7 @@ body.show-chatbot .chatbot-toggler span:last-child {
         <div class="chatbot">
             <header>
     <div class="header-icon-wrap">
-        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
     </div>
     <div class="header-info">
         <h2>Asistente Linkea</h2>
@@ -276,6 +337,7 @@ body.show-chatbot .chatbot-toggler span:last-child {
                 bio: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
                 landing: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
                 corp: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>',
+                payment: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>',
                 back: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5"/><path d="M18 17l-5-5 5-5"/></svg>',
                 check: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
                 arrowRight: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
@@ -287,10 +349,20 @@ body.show-chatbot .chatbot-toggler span:last-child {
                     text: "¿En qué podemos ayudarte a potenciar tu negocio hoy?",
                     options: [
                         { label: "Ver Planes y Servicios", icon: icons.rocket, next: "plans_menu" },
+                        { label: "Métodos de Pago", icon: icons.payment, next: "payment_methods" },
                         { label: "Hablar con Soporte", icon: icons.support, next: "support" },
                         { label: "Conocer Linkea", icon: icons.team, next: "about" }
                     ]
                 },
+
+                payment_methods: {
+                    text: "Aceptamos múltiples opciones para facilitar el inicio de tu proyecto:\n\n<span style='color: #3C77FC;'>◉</span> **Pago Móvil / BDV** (Bolívares)\n<span style='color: #3C77FC;'>◉</span> **PayPal** (USD)\n<span style='color: #3C77FC;'>◉</span> **Binance / USDT** (Cripto)\n\n¿Tienes alguna duda sobre los pagos o necesitas otra plataforma?",
+                    options: [
+                        { label: "Consultar por WhatsApp", icon: icons.support, action: "whatsapp", msg: "Hola, tengo una duda sobre los métodos de pago." },
+                        { label: "Volver al inicio", icon: icons.back, next: "start" }
+                    ]
+                },
+                
                 plans_menu: {
                     text: "Excelente. Tenemos 4 soluciones de alto impacto. Selecciona una para ver detalles:",
                     options: [
@@ -328,21 +400,21 @@ body.show-chatbot .chatbot-toggler span:last-child {
                 },
                 // --- DETALLES CORPORATIVA ---
                 plan_corp: {
-                    text: "🏢 **Web Corporativa Profesional**\nTransmite confianza y seriedad absoluta. Ideal para Clínicas, Constructoras y Agencias.\n\n💰 **Inversión: $450 USD**\n\nIncluye:\n<span style='color: #3C77FC;'>◉</span> SEO On-Page\n<span style='color: #3C77FC;'>◉</span> Portafolio Profesional\n<span style='color: #3C77FC;'>◉</span> Mapa Interactivo\n<span style='color: #3C77FC;'>◉</span> Sección de Contacto Avanzada",
+                    text: "🏢 **Web Corporativa Profesional**\nTransmite confianza y seriedad absoluta. Ideal para Clínicas, Constructoras y Agencias.\n\n💰 **Inversión: $450 USD**\n\nIncluye:\n<span style='color: #3C77FC;'>◉</span> SEO On-Page\n<span style='color: #3C77FC;'>◉</span> Portafolio Profesional\n<span style='color: #3C77FC;'>◉</span> Mapa Interactivo\n<span style='color: #3C77FC;'>◉</span> Chatbot tipo menú\n<span style='color: #3C77FC;'>◉</span> Sección de Contacto Avanzada",
                     options: [
                         { label: "Cotizar mi Web Corporativa", icon: icons.corp, action: "whatsapp", msg: "Hola, necesito una Web Corporativa profesional ($450)" },
                         { label: "Ver otros planes", icon: icons.back, next: "plans_menu" }
                     ]
                 },
                 support: {
-                    text: "Nuestros ingenieros están disponibles de 7:00 AM a 11:00 PM. ¿Prefieres conexión directa?",
+                    text: "Soporte Linkea está disponible de 7:00 AM a 11:00 PM. ¿Prefieres conexión directa?",
                     options: [
                         { label: "Abrir chat de Soporte", icon: icons.support, action: "whatsapp", msg: "Hola Soporte Linkea, tengo una consulta técnica." },
                         { label: "Volver al inicio", icon: icons.back, next: "start" }
                     ]
                 },
                 about: {
-                    text: "**Somos Linkea.** Más que una agencia, somos tus aliados técnicos. Creamos infraestructura digital ultra rápida enfocada en resultados, no solo en estética.",
+                    text: "**Somos Linkea.** Más que una agencia, soy tu aliado técnico dedicado a potenciar tu marca. Diseño infraestructura digital ultra rápida enfocada en resultados, no solo en estética.",
                     options: [
                         { label: "Ver lo que hacemos", icon: icons.rocket, next: "plans_menu" },
                         { label: "Volver", icon: icons.back, next: "start" }
@@ -350,25 +422,71 @@ body.show-chatbot .chatbot-toggler span:last-child {
                 }
             };
 
-            // --- Lógica del Chat (Core) ---
-            setTimeout(() => { // Asegurar carga del DOM
+            //// --- Lógica del Chat (Core) --- ////
+            setTimeout(() => { 
                 const chatbox = document.getElementById("chatbox");
                 const toggler = document.getElementById("botToggler");
                 const closeBtn = document.getElementById("closeBotBtn");
+                const resetBtn = document.getElementById("resetBotBtn");
                 const body = document.body;
 
                 if(!chatbox || !toggler) return;
 
-                // Iniciar flujo
-                setTimeout(() => processStep(botFlow.start), 600); // Pequeña pausa inicial
+                // --- Variables de Control de Estado ---
+                let botIniciado = false; 
+                let esInicio = true;    
+                let esReseteo = false;  
 
-                // Eventos Toggle
-                toggler.addEventListener("click", () => body.classList.toggle("show-chatbot"));
+                // NUEVO: Lógica para mostrar el botón al hacer Scroll
+                const handleScrollBot = () => {
+                    // Si bajamos más de 100px, mostramos el botón
+                    if (window.scrollY > 100) {
+                        toggler.classList.add("show-bot");
+                        // Opcional: Removemos el evento para no gastar recursos (el botón ya se queda)
+                        window.removeEventListener("scroll", handleScrollBot);
+                    }
+                };
+                window.addEventListener("scroll", handleScrollBot);
+
+                // Check inicial por si recargan la página ya escroleada
+                handleScrollBot();
+
+                //// Función: Abrir / Cerrar Chat ////
+                toggler.addEventListener("click", () => {
+                    body.classList.toggle("show-chatbot");
+                    // El bot solo escribe la primera vez que se abre
+                    if (!botIniciado && body.classList.contains("show-chatbot")) {
+                        processStep(botFlow.start);
+                        botIniciado = true;
+                    }
+                });
+
                 closeBtn.addEventListener("click", () => body.classList.remove("show-chatbot"));
 
-                // Función principal para procesar un paso del flujo
+                //// Función: Botón Reiniciar Chat ////
+                if (resetBtn) {
+                    resetBtn.addEventListener("click", () => {
+                        chatbox.innerHTML = ''; 
+                        setTimeout(() => {
+                            esReseteo = true; // Activa el tiempo rápido de carga
+                            esInicio = false; // Desactiva la pausa larga de bienvenida
+                            processStep(botFlow.start);
+                        }, 300);
+                    });
+                }
+
+                //// Función: Procesar Pasos del Chat ////
                 function processStep(stepData) {
                     showTypingIndicator();
+                    
+                    let tiempoEscribiendo = 1500; // Tiempo estándar (1.5 seg)
+
+                    if (esInicio && window.innerWidth > 480) { 
+                        tiempoEscribiendo = 3000; // Bienvenida profesional (3 seg solo en PC)
+                    } else if (esReseteo) {
+                        tiempoEscribiendo = 800; // Tiempo rápido para el Reset (0.8 seg)
+                    }
+
                     setTimeout(() => {
                         removeTypingIndicator();
                         appendBotMessage(stepData.text);
@@ -376,11 +494,14 @@ body.show-chatbot .chatbot-toggler span:last-child {
                             renderOptions(stepData.options);
                         }
                         scrollToBottom();
-                    }, 1500); // Tiempo de "escribiendo..."
+
+                        // Apagamos las señales de tiempo especial
+                        esInicio = false;
+                        esReseteo = false;
+                    }, tiempoEscribiendo);
                 }
 
-
-                // Mostrar indicador "Escribiendo..."
+                //// Función: Indicador de Carga (Puntos ...) ////
                 function showTypingIndicator() {
                     const typingDiv = document.createElement("div");
                     typingDiv.classList.add("typing-indicator");
@@ -390,19 +511,16 @@ body.show-chatbot .chatbot-toggler span:last-child {
                     scrollToBottom();
                 }
 
-                 // Remover indicador
                 function removeTypingIndicator() {
                     const typingDiv = document.getElementById("typing-indicator");
                     if(typingDiv) typingDiv.remove();
                 }
 
-                // Agregar mensaje del Bot (Burbuja)
+                //// Función: Crear Burbuja de Mensaje ////
                 function appendBotMessage(message) {
                     const div = document.createElement("div");
                     div.classList.add("chat-incoming");
-                     // Formateo simple de Markdown (**negrita** y saltos de linea)
                     let formattedMsg = message.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-                    
                     div.innerHTML = `
                         <div class="bot-avatar-small">
                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9z"/><path d="M8 14h8"/><path d="M8 18h8"/></svg>
@@ -412,15 +530,13 @@ body.show-chatbot .chatbot-toggler span:last-child {
                     chatbox.appendChild(div);
                 }
 
-                // Renderizar Tarjetas de Opciones (Premium Cards)
+                //// Función: Crear Menú de Opciones ////
                 function renderOptions(options) {
                     const container = document.createElement("div");
                     container.classList.add("options-container");
-
                     options.forEach(opt => {
                         const card = document.createElement("button");
                         card.classList.add("option-card");
-                        // Estructura de la tarjeta premium
                         card.innerHTML = `
                             <div class="option-icon-wrap">${opt.icon}</div>
                             <span class="option-text">${opt.label}</span>
@@ -433,48 +549,47 @@ body.show-chatbot .chatbot-toggler span:last-child {
                     scrollToBottom();
                 }
 
-                // Manejar clic en tarjeta
+                //// Función: Manejar Clics en Opciones ////
                 function handleCardClick(option, cardElement, container) {
-                    // Efecto visual de selección
-                    container.classList.add("disabled"); // Bloquear contenedor
+                    container.classList.add("disabled"); 
                     Array.from(container.children).forEach(c => c.classList.add("disabled-card"));
                     cardElement.classList.remove("disabled-card");
                     cardElement.classList.add("selected-card");
 
-                    // Acción: WhatsApp
                     if (option.action === "whatsapp") {
                         setTimeout(() => {
                              const phone = "584162779279";
                              const url = `https://wa.me/${phone}?text=${encodeURIComponent(option.msg)}`;
                              window.open(url, '_blank');
-                             // Opcional: Reiniciar chat después de un tiempo
-                             // setTimeout(() => { chatbox.innerHTML = ''; processStep(botFlow.start); }, 3000);
+                             
+                             setTimeout(() => {
+                                 let msg = "Enlace abierto correctamente. 🔗 ¿Te gustaría volver al menú principal?";
+                                 if (option.label.includes("Soporte") || option.label.includes("Consultar")) {
+                                     msg = "He abierto el chat de soporte en otra pestaña. 🛠️ ¿Lograste resolver tu duda?";
+                                 } else if (option.label.includes("Quiero") || option.label.includes("Cotizar") || option.label.includes("Elegir")) {
+                                     msg = "¡Excelente iniciativa! 🚀 Estaremos atentos a tu mensaje en WhatsApp para comenzar. ¿Deseas explorar otros servicios?";
+                                 }
+                                 appendBotMessage(msg);
+                                 renderOptions([
+                                     { label: "Volver al Inicio", icon: icons.back, next: "start" },
+                                     { label: "Ver otros Planes", icon: icons.rocket, next: "plans_menu" }
+                                 ]);
+                             }, 2000);
                         }, 500);
                         return;
                     }
 
-                    // Acción: Siguiente paso
                     if (option.next && botFlow[option.next]) {
                         processStep(botFlow[option.next]);
                     }
                 }
 
+                //// Función: Desplazamiento Automático ////
                 function scrollToBottom() {
                     chatbox.scrollTo({ top: chatbox.scrollHeight, behavior: 'smooth' });
                 }
 
-                const resetBtn = document.getElementById("resetBotBtn");
-                if (resetBtn) {
-                    resetBtn.addEventListener("click", () => {
-                        chatbox.innerHTML = ''; // Limpia todo
-                        // Pequeña pausa para que se vea natural el reinicio
-                        setTimeout(() => {
-                            processStep(botFlow.start);
-                        }, 300);
-                    });
-                }
-
-            }, 200); // Fin setTimeout inicial
+            }, 200);
         })(); // Fin IIFE
 
     </script>

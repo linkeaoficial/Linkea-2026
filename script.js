@@ -146,3 +146,13 @@ contactForm.addEventListener('submit', (e) => {
     // Abrir en una nueva ventana/pestaña
     window.open(url, '_blank');
 });
+
+// --- Lógica del Preloader (Pantalla de Carga) ---
+window.addEventListener('load', () => {
+    const preloader = document.getElementById('preloader');
+    
+    // Pequeña pausa de seguridad para asegurar que se vea la animación al menos un instante
+    setTimeout(() => {
+        preloader.classList.add('hide-loader');
+    }, 800); // 0.8 segundos de carga mínima para que se vea elegante
+});
