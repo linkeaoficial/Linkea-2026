@@ -176,6 +176,8 @@ textarea.form-input { resize: vertical; height: 150px; }
 @keyframes pulseText { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
 body.dark-mode #preloader { background-color: var(--bg-dark); }
 
+body.no-scroll { overflow: hidden; }
+
 /* Ajuste para móviles */
 @media (max-width: 768px) { .scroll-top-btn { width: 44px; height: 44px; bottom: 20px; left: 20px; } }
 

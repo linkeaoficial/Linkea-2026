@@ -1,15 +1,24 @@
 // --- Funcionalidad Menú Hamburguesa (Móvil) ---
 const hamburger = document.getElementById('hamburger');
 const navLinks = document.getElementById('navLinks');
+const bodyElement = document.body; // Referencia al body 💃
 
 hamburger.addEventListener('click', () => {
     navLinks.classList.toggle('active');
+    
+    // 🧠 Si el menú se abre, bloqueamos el scroll. Si se cierra, lo devolvemos.
+    if (navLinks.classList.contains('active')) {
+        bodyElement.classList.add('no-scroll');
+    } else {
+        bodyElement.classList.remove('no-scroll');
+    }
 });
 
-// Cerrar menú al hacer clic en un enlace
+// Cerrar menú y desbloquear scroll al hacer clic en un enlace 🔗
 document.querySelectorAll('#navLinks a').forEach(link => {
     link.addEventListener('click', () => {
         navLinks.classList.remove('active');
+        bodyElement.classList.remove('no-scroll'); // ¡Importante devolver el scroll! 🔄
     });
 });
 
