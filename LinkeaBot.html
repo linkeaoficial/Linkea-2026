@@ -383,7 +383,7 @@ body.show-chatbot .chatbot-toggler span:last-child {
                 },
                 // --- DETALLES PÁGINA DE ENLACES (BIO LINKS) ---
                 plan_bio: {
-                text: "🔗 **Bio Links: Tu Marca Personal 24/7**\nMucho más que un Linktree, una tarjeta digital premium.\n\n<span style='color: #3C77FC;'>◉</span> **Plan Personal ($10/mes):** Hasta 6 enlaces, galería de fotos, diseño custom y subdominio Linkea.\n<span style='color: #3C77FC;'>◉</span> **Plan Premium ($30 inicial):** Incluye tu propio **dominio .com** + Enlaces ilimitados + Animaciones + Galería avanzada + Integración de Video + Optimización SEO.\n\n*Nota: El Plan Premium baja a solo **$15/mes** a partir del segundo mes.* 💎✨",
+                text: "🔗 **Bio Links: Tu Marca Personal 24/7**\nMucho más que un Linktree, una tarjeta digital premium.\n\n<span style='color: #3C77FC;'>◉</span> **Plan Personal ($10/mes):** Hasta 6 enlaces, botones de redes sociales, diseño custom y subdominio linkea.\n<span style='color: #3C77FC;'>◉</span> **Plan Premium ($30 inicial):** Incluye tu propio **dominio .com** + Enlaces ilimitados + Animaciones + Galería avanzada + Analítica + Integración de Video + Optimización SEO.\n\n*Nota: El Plan Premium baja a solo **$20/mes** a partir del segundo mes.* 💎✨",
                 options: [
                     { label: "Plan Personal ($10/mes)", icon: icons.bio, action: "whatsapp", msg: "Hola, me interesa el Plan Bio Links Personal (6 enlaces)." },
                     { label: "Plan Premium ($30 setup)", icon: icons.rocket, action: "whatsapp", msg: "Hola, quiero el Plan Bio Links Premium con dominio .com incluido." },
@@ -454,6 +454,16 @@ body.show-chatbot .chatbot-toggler span:last-child {
                 //// Función: Abrir / Cerrar Chat ////
                 toggler.addEventListener("click", () => {
                     body.classList.toggle("show-chatbot");
+                    
+                    // BLOQUEO DE SCROLL: Solo si es móvil (menos de 480px)
+                    if (window.innerWidth <= 480) {
+                        if (body.classList.contains("show-chatbot")) {
+                            body.classList.add("no-scroll");
+                        } else {
+                            body.classList.remove("no-scroll");
+                        }
+                    }
+
                     // El bot solo escribe la primera vez que se abre
                     if (!botIniciado && body.classList.contains("show-chatbot")) {
                         processStep(botFlow.start);
@@ -461,7 +471,10 @@ body.show-chatbot .chatbot-toggler span:last-child {
                     }
                 });
 
-                closeBtn.addEventListener("click", () => body.classList.remove("show-chatbot"));
+                closeBtn.addEventListener("click", () => {
+                    body.classList.remove("show-chatbot");
+                    body.classList.remove("no-scroll"); // Aseguramos que siempre se devuelva el scroll al cerrar
+                });
 
                 //// Función: Botón Reiniciar Chat ////
                 if (resetBtn) {
