@@ -182,3 +182,11 @@ body.no-scroll { overflow: hidden; }
 @media (max-width: 768px) { .scroll-top-btn { width: 44px; height: 44px; bottom: 20px; left: 20px; } }
 
 @media (min-width: 969px) { #testimonios .section-title { margin-bottom: 6rem !important; } #contacto { padding-top: 100px !important; } }
+
+/* --- ANIMACIÓN DE ENTRADA HERO (Formato Compacto) --- */
+.hero-title, .hero-text, .hero-content > div:nth-of-type(1), .hero-socials { opacity: 0; transform: translateY(40px); transition: all 1s cubic-bezier(0.215, 0.610, 0.355, 1.000); }
+.hero-active .hero-title, .hero-active .hero-text, .hero-active .hero-content > div:nth-of-type(1), .hero-active .hero-socials { opacity: 1; transform: translateY(0); }
+.hero-active .hero-title { transition-delay: 0.1s; }
+.hero-active .hero-text { transition-delay: 0.3s; }
+.hero-active .hero-content > div:nth-of-type(1) { transition-delay: 0.5s; }
+.hero-active .hero-socials { transition-delay: 0.7s; }

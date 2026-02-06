@@ -156,12 +156,21 @@ contactForm.addEventListener('submit', (e) => {
     window.open(url, '_blank');
 });
 
-// --- Lógica del Preloader (Pantalla de Carga) ---
+// --- Lógica del Preloader y Entrada Triunfal ---
 window.addEventListener('load', () => {
     const preloader = document.getElementById('preloader');
-    
-    // Pequeña pausa de seguridad para asegurar que se vea la animación al menos un instante
+    const heroSection = document.querySelector('.hero'); // Seleccionamos la sección Hero
+
+    // 1. Ocultar el preloader (mantenemos tu tiempo de 800ms)
     setTimeout(() => {
         preloader.classList.add('hide-loader');
-    }, 800); // 0.8 segundos de carga mínima para que se vea elegante
+        
+        // 2. DISPARAR LA ANIMACIÓN DE LA PORTADA
+        // Esperamos un instante pequeñito (200ms) para que el loader se desvanezca
+        // y entonces entren los textos y botones.
+        setTimeout(() => {
+            heroSection.classList.add('hero-active');
+        }, 200);
+
+    }, 800); 
 });
