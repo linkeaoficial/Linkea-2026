@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linkea | Diseño Web Moderno y Tiendas WhatsApp</title>
+    <title>Linkea | Diseño Web</title>
     <meta name="description" content="En Linkea creamos páginas web modernas, páginas de enlaces y tiendas online integradas con WhatsApp. Impulsa tu negocio con diseño profesional y funcional.">
     <meta name="keywords" content="diseño web, tiendas whatsapp, pagina de ventas, desarrollo web, linkea, portafolio web, ecommerce simple">
     <meta name="author" content="Linkea">
@@ -11,7 +11,42 @@
     <meta property="og:description" content="Creamos la presencia digital que tu marca merece. Webs ultra rápidas y ventas directas por WhatsApp.">
     <meta property="og:type" content="website">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <script type="application/ld+json">
+    {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "Linkea",
+    "image": "https://tu-dominio.com/logo.png", 
+    "@id": "https://tu-dominio.com",
+    "url": "https://tu-dominio.com",
+    "telephone": "+584162779279",
+    "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "VE"
+    },
+    "description": "Expertos en diseño web moderno, páginas de enlace y tiendas online integradas con WhatsApp.",
+    "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+        ],
+        "opens": "07:00",
+        "closes": "23:00"
+    },
+    "sameAs": [
+        "https://facebook.com/tu-perfil",
+        "https://instagram.com/tu-perfil"
+    ]
+    }
+    </script>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='100' y='50%' dominant-baseline='central' text-anchor='end' font-size='90' fill='%233C77FC' font-family='Arial, sans-serif' font-weight='900'>L</text></svg>">    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
@@ -170,7 +205,7 @@
 
                 <div class="portfolio-grid">
                     <a href="https://linkeaoficial.github.io/Ferre-Master/" target="_blank" class="portfolio-item">
-    <img src="https://images.unsplash.com/photo-1581147036324-c17ac41dfa6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="FerreMaster Pro E-commerce" class="portfolio-img">
+    <img src="https://images.unsplash.com/photo-1581147036324-c17ac41dfa6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="FerreMaster Pro E-commerce" class="portfolio-img" loading="lazy">
     
     <div class="portfolio-overlay">
         <div class="portfolio-content">
@@ -187,7 +222,7 @@
     </div>
 </a>
                     <a href="https://linkeaoficial.github.io/Elepad-Gaming-Tablet/" target="_blank" class="portfolio-item">
-    <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=2070&auto=format&fit=crop" alt="Elepad Gaming Tablet" class="portfolio-img">
+    <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=2070&auto=format&fit=crop" alt="Elepad Gaming Tablet" class="portfolio-img" loading="lazy">
     
     <div class="portfolio-overlay">
         <div class="portfolio-content">
@@ -204,7 +239,7 @@
     </div>
 </a>
                     <a href="https://linkeaoficial.github.io/Pagina-De-Enlace/" target="_blank" class="portfolio-item">
-    <img src="https://i.postimg.cc/y8b6nxYL/Dra-Elena.jpg" alt="Proyecto Link Page Marca Personal" class="portfolio-img">
+    <img src="https://i.postimg.cc/y8b6nxYL/Dra-Elena.jpg" alt="Proyecto Link Page Marca Personal" class="portfolio-img" loading="lazy">
     
     <div class="portfolio-overlay">
         <div class="portfolio-content">
@@ -240,7 +275,7 @@
                                 <span>Dueño de Repuestos Cars</span>
                             </div>
                         </div>
-                        <p class="testimonial-text">"Increíble sistema de WhatsApp. Mis ventas subieron un 40% y los clientes piden justo lo que necesitan. ¡La inversión se pagó sola!"</p>
+                        <p class="testimonial-text">"Increíble la tienda con pedidos a WhatsApp. Mis ventas subieron un 40% porque ahora los clientes me envían el pedido detallado con un clic. ¡La inversión se pagó sola!"</p>
                     </div>
                     <div class="glass-card testimonial-card">
                         <div class="testimonial-header">
@@ -296,7 +331,7 @@
 </div>
 </div>
 
-                    <form class="glass-card contact-form">
+                    <form class="glass-card contact-form" novalidate>
     <div class="form-group">
         <label for="name" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Tu Nombre</label>
         <input type="text" id="name" class="form-input" placeholder="Ej: Juan Pérez" required>
@@ -388,15 +423,32 @@
                     <li><a href="#contacto">Contacto</a></li>
                 </ul>
             </div>
+
+            <div class="footer-links">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#" class="legal-trigger" data-type="terms">Términos</a></li>
+                    <li><a href="#" class="legal-trigger" data-type="privacy">Privacidad</a></li>
+                    <li><a href="#" class="legal-trigger" data-type="support">Soporte</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="legal-expandable" class="legal-expandable">
+            <div class="legal-inner-content">
+                <button id="close-legal-btn" class="close-legal-btn">&times;</button>
+                <h3 id="legal-title">Título Legal</h3>
+                <div id="legal-body"></div>
+            </div>
         </div>
 
         <div class="footer-payments">
             <div class="payment-methods">
-                <img src="https://i.postimg.cc/5HVMRh2Q/LOGO-BDV.jpg" alt="BDV" class="payment-logo">
+                <img src="https://i.postimg.cc/5HVMRh2Q/LOGO-BDV.jpg" alt="BDV" class="payment-logo" loading="lazy">
                 <div class="payment-sep"></div>
-                <img src="https://i.postimg.cc/WDwPL5d5/LOGO-PAYPAL.jpg" alt="PayPal" class="payment-logo">
+                <img src="https://i.postimg.cc/WDwPL5d5/LOGO-PAYPAL.jpg" alt="PayPal" class="payment-logo" loading="lazy">
                 <div class="payment-sep"></div>
-                <img src="https://i.postimg.cc/VS8cVxkj/LOGO-BINANCE.png" alt="Binance" class="payment-logo">
+                <img src="https://i.postimg.cc/VS8cVxkj/LOGO-BINANCE.png" alt="Binance" class="payment-logo" loading="lazy">
             </div>
         </div>
 
@@ -411,6 +463,25 @@
         <path d="m18 15-6-6-6 6"/>
     </svg>
 </button>
+
+<div id="cookie-banner" class="cookie-banner">
+    <div class="cookie-content">
+        <div class="cookie-text-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cookie-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
+                <path d="M8.5 8.5v.01"></path>
+                <path d="M16 15.5v.01"></path>
+                <path d="M12 12v.01"></path>
+                <path d="M11 17v.01"></path>
+                <path d="M7 14v.01"></path>
+            </svg>
+            <p>Utilizamos cookies para mejorar tu experiencia y recordar tus preferencias de diseño.</p>
+        </div>
+        <div class="cookie-buttons">
+            <button id="accept-cookies" class="btn btn-primary btn-sm">Aceptar</button>
+        </div>
+    </div>
+</div>
 
     <script>
     // Carga asíncrona del chatbot premium
@@ -436,5 +507,6 @@
 </script>
 
     <script src="script.js"></script>
+
 </body>
 </html>
