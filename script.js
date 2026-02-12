@@ -307,3 +307,62 @@ document.addEventListener('DOMContentLoaded', () => {
         legalPanel.classList.remove('active');
     });
 });
+
+/* --- SISTEMA DE RASTREO LINKEA (Analytics) --- */
+const TRACKING_URL = 'https://mi-api-analitica.elitemarketing-a94.workers.dev/api/track';
+
+function enviarEvento(tipo, ruta, dispositivo) {
+    fetch(TRACKING_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: tipo, path: ruta, device: dispositivo }),
+        keepalive: true
+    }).catch(err => console.log('Error tracking:', err));
+}
+
+function getDeviceType() {
+    const width = window.innerWidth;
+    if (width < 768) return 'mobile';
+    if (width <= 1024) return 'tablet';
+    return 'desktop';
+}
+
+// 1. Rastrear Visita (Pageview)
+window.addEventListener('load', () => {
+    enviarEvento('pageview', window.location.pathname, getDeviceType());
+});
+
+// 2. Rastrear Formulario Enviado (El "Lead")
+const formTracker = document.querySelector('.contact-form');
+if (formTracker) {
+    formTracker.addEventListener('submit', () => {
+        // Esperamos 500ms para asegurar que la validación pasó (si no hay clase 'error')
+        setTimeout(() => {
+            if (!formTracker.querySelector('.error')) {
+                enviarEvento('click', '/formulario-enviado', getDeviceType());
+            }
+        }, 500);
+    });
+}
+
+// 3. Rastrear Clics (Chatbot, WhatsApp, Redes)
+document.body.addEventListener('click', (e) => {
+    const target = e.target.closest('a, button'); 
+    if (!target) return;
+
+    const device = getDeviceType();
+
+    // A. Chatbot
+    if (target.id === 'botToggler' || target.closest('#botToggler')) {
+        enviarEvento('click', '/accion-chatbot', device);
+    }
+
+    // B. WhatsApp (Cualquier enlace a wa.me)
+    if (target.href && target.href.includes('wa.me')) {
+        enviarEvento('click', '/contacto-whatsapp', device);
+    }
+
+    // C. Instagram y Facebook
+    if (target.href && target.href.includes('instagram.com')) enviarEvento('click', '/red-instagram', device);
+    if (target.href && target.href.includes('facebook.com')) enviarEvento('click', '/red-facebook', device);
+});

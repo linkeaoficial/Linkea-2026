@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard | Linkea</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233C77FC'%3E%3Cpath d='M3 22h18v-2H3v2zm2-4h3V7H5v11zm5 0h3V2h-3v16zm5 0h3V11h-3v7z'/%3E%3C/svg%3E">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+       
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            padding: 1rem; /* Padding más pequeño para móviles */
+            min-height: 100vh;
+            overflow-x: hidden; /* Evita el scroll horizontal por completo */
+        }
+
+        /* En pantallas grandes (Tablet/PC) volvemos al padding original */
+        @media (min-width: 768px) {
+            body {
+                padding: 2rem;
+            }
+        }
+
+        /* Header del Dashboard */
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .dash-title h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.2rem;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0.7;
+            color: var(--text-light);
+        }
+        body.dark-mode .live-indicator { color: var(--text-dark); }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Grid System (Reemplazo de Tailwind Grid) */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            grid-auto-rows: minmax(160px, auto);
+        }
+
+        @media (min-width: 768px) {
+            .bento-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 1024px) {
+            .bento-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        /* Utilidades de Grid */
+        .col-span-1 { grid-column: span 1; }
+        .col-span-2 { grid-column: span 1; } /* Mobile default */
+        .row-span-2 { grid-row: span 1; } /* Mobile default */
+        
+        @media (min-width: 768px) {
+            .col-span-2 { grid-column: span 2; }
+        }
+        @media (min-width: 1024px) {
+            .col-span-3 { grid-column: span 3; }
+            .row-span-2 { grid-row: span 2; }
+        }
+
+        .glass-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start !important; /* Fuerza a que todo empiece arriba */
+        gap: 1rem !important;                /* Espacio idéntico entre título y contenido en todas */
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
+
+        /* Unifica los encabezados de todas las tarjetas */
+        .glass-card h4, .flex-between {
+            margin-bottom: 0 !important; /* Quitamos el margen inferior para que mande el 'gap' del padre */
+        }
+
+        .card-icon-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .icon-box {
+            padding: 0.75rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+        .icon-box svg { width: 24px; height: 24px; stroke-width: 2; }
+        
+        /* Colores de Iconos */
+        .bg-indigo { background: rgba(60, 119, 252, 0.1); color: var(--primary); }
+        .bg-blue { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
+        .bg-amber { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .bg-rose { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
+        .bg-emerald { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+        .bg-pink { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+        .bg-orange { background: rgba(249, 115, 22, 0.1); color: #f97316; }
+
+        .glass-card:hover .icon-box { transform: scale(1.1); }
+
+        .kpi-value { font-size: 2.2rem; font-weight: 700; color: var(--text-light); line-height: 1; }
+        .kpi-label { font-size: 0.9rem; font-weight: 500; opacity: 0.6; margin-top: 0.5rem; }
+        
+        body.dark-mode .kpi-value { color: white; }
+
+        /* Badges */
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+        .badge-trend { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+        .badge-trend.down { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
+
+        /* Tablas */
+        .dash-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .dash-table th { text-align: left; padding: 1rem; font-weight: 600; opacity: 0.8; border-bottom: 1px solid var(--glass-border-light); }
+        .dash-table td { padding: 0.8rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-light); }
+        body.dark-mode .dash-table td { color: rgba(255,255,255,0.8); }
+        .dash-table tr:last-child td { border-bottom: none; }
+        .dash-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* Botones de Periodo */
+        .period-selector {
+            background: rgba(255,255,255,0.05);
+            padding: 4px;
+            border-radius: 12px;
+            display: flex;
+            gap: 2px;
+            border: 1px solid var(--glass-border-light);
+        }
+        .period-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            cursor: pointer;
+            opacity: 0.6;
+            transition: all 0.3s;
+        }
+        body.dark-mode .period-btn { color: white; }
+        .period-btn:hover { opacity: 1; }
+        .period-btn.active {
+            background: var(--primary);
+            color: white;
+            opacity: 1;
+            box-shadow: 0 2px 10px rgba(60, 119, 252, 0.3);
+        }
+
+        .list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0.8rem !important; /* Padding reducido */
+    border-radius: 10px;
+    margin-bottom: 0.4rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.02);
+    min-height: 42px !important; /* Altura reducida de 52px a 42px */
+    box-sizing: border-box;
+}
+
+/* También reducimos un poco el tamaño de los iconos internos para que no estiren el box */
+.list-item i, .list-item .icon-wrapper {
+    font-size: 0.85rem !important;
+}
+
+/* Fondo en modo oscuro */
+body.dark-mode .list-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Arreglo para evitar que suba y se oculte la parte de arriba */
+.list-item:hover {
+    /* Eliminamos el translateY para que no se mueva de su sitio */
+    background: var(--primary) !important; 
+    border-color: var(--primary);
+    box-shadow: 0 4px 15px rgba(60, 119, 252, 0.2);
+    cursor: pointer;
+}
+
+/* Este bloque es el que quita el "parche" de color del icono de forma fluida */
+.list-item:hover div[style*="background"] {
+    background-color: rgba(255, 255, 255, 0.15) !important; /* En lugar de transparente, le damos un brillo blanco sutil */
+    box-shadow: none !important;
+}
+
+/* Asegura que el texto y los iconos se pongan blancos al mismo tiempo */
+.list-item:hover span, 
+.list-item:hover i, 
+.list-item:hover div {
+    color: white !important;
+}
+
+
+        .progress-bg { height: 6px; width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 4px; }
+        .progress-fill { height: 100%; border-radius: 10px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Modales */
+        #linksModal, #genericModal { 
+            background: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(5px);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            width: 100%; max-width: 700px; max-height: 85vh; 
+            display: flex; flex-direction: column;
+        }
+        .modal-header {
+            padding: 1.5rem; border-bottom: 1px solid var(--glass-border-light);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .close-modal { font-size: 1.5rem; cursor: pointer; opacity: 0.6; background: none; border: none; color: inherit; }
+        .close-modal:hover { opacity: 1; color: var(--primary); }
+
+        /* Scrollbar interno */
+        .overflow-y-auto { overflow-y: auto; }
+        .overflow-y-auto::-webkit-scrollbar { width: 4px; }
+        .overflow-y-auto::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+
+        /* Animaciones */
+        .animate-enter { opacity: 0; animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+
+        /* Helpers */
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .hidden { display: none !important; }
+        
+        /* Botones de acción */
+        .action-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border-light);
+            color: var(--text-light);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+            cursor: pointer; transition: 0.3s;
+        }
+        body.dark-mode .action-btn { color: white; }
+        .action-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        /* Botón Modo Oscuro en Header */
+        .theme-toggle-dash {
+            background: none; border: none; cursor: pointer; padding: 8px;
+            color: var(--text-light); display: flex; align-items: center;
+        }
+        body.dark-mode .theme-toggle-dash { color: white; }
+
+        /* --- REEMPLAZO DE TAILWIND (ESTRUCTURA) --- */
+body {
+    padding: 2rem;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light); /* Usa variables de Linkea */
+    color: var(--text-light);
+}
+body.dark-mode {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+}
+
+/* Grid System Manual */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+@media (min-width: 768px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .dashboard-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* Utilidades de Espacio (Helpers) */
+.col-span-1 { grid-column: span 1; }
+.col-span-2 { grid-column: span 1; } /* Mobile default */
+.col-span-3 { grid-column: span 1; } /* Mobile default */
+.row-span-2 { grid-row: span 1; }
+
+@media (min-width: 768px) { .col-span-2 { grid-column: span 2; } }
+@media (min-width: 1024px) { 
+    .col-span-3 { grid-column: span 3; }
+    .row-span-2 { grid-row: span 2; }
+}
+
+/* Reemplazo de clases de texto Tailwind */
+.text-3xl { font-size: 2rem; font-weight: 700; }
+.text-lg { font-size: 1.15rem; font-weight: 600; }
+.text-sm { font-size: 0.875rem; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.justify-between { justify-content: space-between; }
+.items-center { align-items: center; }
+.gap-4 { gap: 1rem; }
+.p-6 { padding: 1.5rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+
+/* Adopción de estilo Linkea */
+.bento-card {
+    background: var(--glass-bg-light);
+    border: 1px solid var(--glass-border-light);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    /* Eliminar estilos viejos de aurora si conflictúan */
+}
+body.dark-mode .bento-card {
+    background: var(--glass-bg-dark);
+    border-color: var(--glass-border-dark);
+}
+
+/* Ajuste para que las listas no estiren la tarjeta infinitamente */
+#countriesContainer, #linksTableBody, #referrersContainer {
+    max-height: 350px; 
+    overflow-y: auto;
+    padding-right: 5px;
+}
+/* Estira las filas tanto en la tabla principal como en la del modal */
+#linksTableBody td, 
+#modalLinksTableBody td {
+    padding: 1.2rem 1rem !important;
+}
+
+/* Opcional: Estilo de scroll delgado para estas listas */
+#countriesContainer::-webkit-scrollbar { width: 4px; }
+#countriesContainer::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        
+    </style>
+</head>
+<body>
+
+    <div class="background-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+</div>
+
+<header class="dash-header">
+    <div class="dash-title">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <h1>Analytics</h1>
+            <button class="theme-toggle-dash" id="themeToggle" aria-label="Cambiar tema">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon sun-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon moon-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+            </button>
+        </div>
+        <p class="live-indicator">
+            <span class="pulse-dot"></span>
+            Actualización en tiempo real
+        </p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <span id="lastUpdate" style="font-size: 0.75rem; font-family: monospace; opacity: 0.7; text-transform: uppercase;">SINCRONIZANDO...</span>
+        
+        <button id="refreshBtn" class="action-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            Actualizar
+        </button>
+
+        <button class="action-btn" style="opacity: 0.8;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+            Exportar
+        </button>
+    </div>
+</header>
+
+<div class="bento-grid">
+
+    <div class="glass-card"> 
+        <div class="card-icon-header">
+            <div class="icon-box bg-indigo">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.43 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+            </div>
+            <span id="viewsTrend" class="badge badge-trend">--%</span>
+        </div>
+        <div>
+            <h3 class="kpi-value" id="totalViews">0</h3>
+            <p class="kpi-label">Vistas Totales</p>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="card-icon-header">
+            <div class="icon-box bg-blue">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+            </div>
+        </div>
+        <div>
+            <h3 class="kpi-value" id="uniqueVisitors">0</h3>
+            <p class="kpi-label">Visitantes Únicos</p>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="card-icon-header">
+            <div class="icon-box bg-amber">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.834.166-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243-1.59-1.59" /></svg>
+            </div>
+            <div style="text-align: right;">
+                <span id="ctrBadge" class="badge badge-trend" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">0% CTR</span>
+                <p style="font-size: 9px; opacity: 0.6; margin-top: 4px; text-transform: uppercase;">Efectividad</p>
+            </div>
+        </div>
+        <div>
+            <h3 class="kpi-value" id="linkClicks">0</h3>
+            <p class="kpi-label">Clicks Totales</p>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="card-icon-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="icon-box bg-rose" style="padding: 6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                </div>
+                <span style="font-weight: 600; font-size: 0.9rem;">Horas Punta</span>
+            </div>
+            <span id="peakHourBadge" class="badge hidden" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e;">--:--</span>
+        </div>
+        <div style="position: relative; height: 110px; width: 100%;"><canvas id="hoursChart"></canvas></div>
+    </div>
+
+    <div class="glass-card col-span-2 col-span-3 row-span-2 animate-enter delay-500">
+        <div class="flex-between">
+            <h4 style="font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: var(--primary);"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" /></svg>
+                Tendencia de Tráfico
+            </h4>
+            <div class="period-selector">
+                <button onclick="changePeriod('day')" id="btn-day" class="period-btn">DÍA</button>
+                <button onclick="changePeriod('week')" id="btn-week" class="period-btn active">SEMANA</button>
+                <button onclick="changePeriod('month')" id="btn-month" class="period-btn">MES</button>
+                <button onclick="changePeriod('year')" id="btn-year" class="period-btn">AÑO</button>
+            </div>
+        </div> 
+        <div style="position: relative; height: 320px; width: 100%;"><canvas id="trafficChart"></canvas></div>
+    </div>
+
+    <div class="glass-card row-span-2 animate-enter delay-500">
+    <div class="flex-between">
+        <h4 style="font-weight: 700; display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: var(--primary);"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" /></svg>
+            Top Países
+        </h4>
+        <button onclick="openGenericModal('countries')" class="action-btn" style="padding: 4px 8px; border-radius: 8px;">
+            <i class="fas fa-eye"></i>
+        </button>
+    </div>
+    <div id="countriesContainer" class="overflow-y-auto" style="padding-right: 5px; margin-top: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <div class="list-item" style="justify-content: center; opacity: 0.6;">
+            <span>Cargando países...</span>
+        </div>
+    </div>
+</div>
+
+    <div id="deviceCard" class="glass-card col-span-1">
+    <h4 style="font-weight: 700; display: flex; align-items: center; gap: 8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: #06b6d4;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+        Dispositivos
+    </h4>
+    <div id="deviceChartContainer" style="position: relative; height: 130px; width: 100%; display: flex; justify-content: center;">
+        <canvas id="deviceChart"></canvas>
+    </div>
+    <div id="deviceStatsContainer" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div class="list-item" style="justify-content: center; opacity: 0.6;">
+            <span>Cargando dispositivos...</span>
+        </div>
+    </div>
+</div>
+
+    <div class="glass-card col-span-1">
+        <h4 style="font-weight: 700; display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: #10B981;"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5m-1.5 12.75V21m-7.5-6h7.5m-7.5-3h7.5m-7.5-3h7.5m-12-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V5.25A2.25 2.25 0 0 0 18.75 3H5.25Z" /></svg>
+            Sistemas
+        </h4>
+        <div id="osStatsContainer" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <p style="text-align: center; font-style: italic; opacity: 0.6; font-size: 0.8rem;">Cargando...</p>
+        </div>
+    </div>
+
+    <div class="glass-card col-span-1">
+        <div class="flex-between">
+            <h4 style="font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: #f97316;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.834.166-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243-1.59-1.59" /></svg>
+                Fuentes
+            </h4>
+            <button onclick="openGenericModal('referrers')" class="action-btn" style="padding: 4px 8px; border-radius: 8px;">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+        <div id="referrersContainer" style="display: flex; flex-direction: column; gap: 0.8rem;">
+            <p style="text-align: center; opacity: 0.6; font-size: 0.8rem;">Cargando...</p>
+        </div>
+    </div>
+
+    <div class="glass-card col-span-1">
+     <div style="position: absolute; right: -40px; bottom: -40px; width: 128px; height: 128px; background: rgba(60, 119, 252, 0.1); border-radius: 50%; filter: blur(40px);"></div>
+    
+    <div style="display: flex; align-items: center; gap: 12px;">
+    <div class="icon-box bg-indigo" style="padding: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 18px; height: 18px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+    </div>
+    <h4 style="font-weight: 600; margin: 0; line-height: 1; display: flex; align-items: center;">Sesión Media</h4>
+</div>
+    
+    <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 1rem;">
+        <span id="avgSessionTime" style="font-size: 2.2rem; font-weight: 700; line-height: 1;">0:00</span>
+        <span style="color: var(--primary); font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding-bottom: 4px;">Promedio</span>
+    </div>
+    
+    <div style="width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px; overflow: hidden; margin-top: 0.5rem;">
+        <div id="sessionProgressBar" class="progress-bar-animate" style="background: var(--primary); height: 100%; width: 0%; border-radius: 10px; transition: width 1s ease; box-shadow: 0 0 10px rgba(60, 119, 252, 0.5);"></div>
+    </div>
+    <p style="font-size: 0.65rem; opacity: 0.5; font-style: italic; margin-top: 0.5rem;">Basado en actividad de clics. ⏳</p>
+</div>
+
+    <div class="glass-card col-span-2 col-span-3">
+        <div class="flex-between">
+            <h4 style="font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                <div class="icon-box bg-indigo" style="padding: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" /></svg>
+                </div>
+                Enlaces Populares
+            </h4>
+            <button onclick="openLinksModal()" class="action-btn" title="Ver todos">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 20.25v-4.5m0 4.5h-4.5m4.5 0-6-6M3 20.25h4.5m-4.5 0v-4.5m0 4.5 6-6M20.25 3.75h-4.5m4.5 0v4.5m0-4.5-6 6" /></svg>
+            </button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th style="border-radius: 8px 0 0 8px;">Destino del Enlace</th>
+                        <th style="text-align: right; border-radius: 0 8px 8px 0;">Clicks</th>
+                    </tr>
+                </thead>
+                <tbody id="linksTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="glass-card col-span-1" style="display: flex; flex-direction: column;">
+    <div class="flex-between">
+        <h4 style="font-weight: 700; display: flex; align-items: center; gap: 8px;">
+            <div class="icon-box bg-pink" style="padding: 6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+            </div>
+            Ciudades
+        </h4>
+        <button onclick="openGenericModal('cities')" class="action-btn" style="padding: 4px 8px; border-radius: 8px;">
+            <i class="fas fa-eye"></i>
+        </button>
+    </div>
+    <div id="citiesContainer" class="overflow-y-auto" style="flex: 1; max-height: 300px; padding-right: 5px; display: flex; flex-direction: column; gap: 1rem; margin-top: 1.2rem;">
+        <p style="text-align: center; opacity: 0.6; font-size: 0.8rem; margin-top: 1rem;">Cargando...</p>
+    </div>
+</div>
+
+</div>
+
+    <div id="linksModal">
+        <div class="glass-card modal-content animate-enter">
+            <div class="modal-header">
+                <h3 style="font-size: 1.25rem; font-weight: 700;">Todos los Enlaces</h3>
+                <button onclick="closeLinksModal()" class="close-modal">&times;</button>
+            </div>
+            <div class="overflow-y-auto" style="padding: 1rem;">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>Enlaces</th>
+                            <th style="text-align: right;">Clicks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalLinksTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="genericModal">
+        <div class="glass-card modal-content animate-enter">
+            <div class="modal-header">
+                <h3 id="genericModalTitle" style="font-size: 1.25rem; font-weight: 700;">Detalles</h3>
+                <button onclick="closeGenericModal()" class="close-modal">&times;</button>
+            </div>
+            <div class="overflow-y-auto" style="padding: 1rem;">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th id="col1Title">Nombre</th>
+                            <th id="col2Title" style="text-align: right;">Visitas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="genericModalBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // Sincronización de Tema
+const currentTheme = localStorage.getItem('theme');
+if (currentTheme === 'dark') {
+    document.body.classList.add('dark-mode');
+}
+        // --- 1. CONFIGURACIÓN DE TEMA (MODO OSCURO) ---
+        // Sincronizado con index.html y style.css
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const sunIcon = document.querySelector('.sun-icon');
+        const moonIcon = document.querySelector('.moon-icon');
+
+        // Función para aplicar tema
+        function applyTheme(isDark) {
+            if (isDark) {
+                body.classList.add('dark-mode');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+                localStorage.setItem('theme', 'dark');
+                // Actualizar gráficas si es necesario
+                if(trafficChart) {
+                    Chart.defaults.color = '#94a3b8';
+                    Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+                    trafficChart.update();
+                }
+            } else {
+                body.classList.remove('dark-mode');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+                localStorage.setItem('theme', 'light');
+                // Actualizar gráficas para modo claro
+                if(trafficChart) {
+                    Chart.defaults.color = '#475569';
+                    Chart.defaults.scale.grid.color = 'rgba(0, 0, 0, 0.05)';
+                    trafficChart.update();
+                }
+            }
+        }
+
+        // Listener del botón
+        themeToggle.addEventListener('click', () => {
+            const isDark = !body.classList.contains('dark-mode');
+            applyTheme(isDark);
+        });
+
+
+        // --- 2. VARIABLES GLOBALES DE ANALÍTICA ---
+        const NOMBRES_ENLACES = {
+        "/": "🏠 Visita a la Página",
+        "/index.html": "🏠 Visita a la Página",
+        "/accion-chatbot": "🤖 Apertura del Chatbot",
+        "/formulario-enviado": "📝Formulario Enviado",
+        "/contacto-whatsapp": "💬 Clic en WhatsApp",
+        "/red-instagram": "📸 Clic en Instagram",
+        "/red-facebook": "👍 Clic en Facebook"
+    };
+
+        let trafficChart;
+        let deviceChart;
+        let hoursChart;
+        let currentPeriod = 'week';
+        
+        // BANDERA DE CONTROL
+        let dispositivoYaAnimado = false;
+
+        // --- FUNCIONES DE UTILIDAD ---
+        function formatearNombre(ruta) {
+            if (ruta.startsWith('/item/')) return "📱 Prueba desde Móvil";
+            if (ruta.includes('Users/User/Downloads')) return "💻 Prueba Local (PC)";
+            if (NOMBRES_ENLACES[ruta]) return NOMBRES_ENLACES[ruta];
+            let limpio = ruta.replace(/^\//, '').replace(/-/g, ' ');
+            return limpio.charAt(0).toUpperCase() + limpio.slice(1);
+        }
+
+        function getOsIcon(osName) {
+            if (osName === 'Android') return '<i class="fab fa-android text-emerald-500" style="color: #10B981;"></i>';
+            if (osName === 'Windows') return '<i class="fab fa-windows text-blue-400" style="color: #3b82f6;"></i>';
+            if (osName === 'iOS' || osName === 'macOS') return '<i class="fab fa-apple" style="color: inherit;"></i>';
+            return '<i class="fas fa-desktop" style="opacity: 0.5;"></i>';
+        }
+
+        function getFlag(countryCode) {
+            if (!countryCode || countryCode === 'XX') return '🌐';
+            return countryCode.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
+        }
+
+        // --- CONFIGURACIÓN CHART.JS ---
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        
+        // Colores de la marca Linkea
+        const BRAND_PRIMARY = '#3C77FC';
+        const BRAND_SECONDARY = '#7545FD';
+
+        // 1. CHART TRÁFICO
+        const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
+        const gradientTraffic = ctxTraffic.createLinearGradient(0, 0, 0, 300);
+        gradientTraffic.addColorStop(0, 'rgba(60, 119, 252, 0.5)'); // Linkea Blue
+        gradientTraffic.addColorStop(1, 'rgba(60, 119, 252, 0)');
+
+        trafficChart = new Chart(ctxTraffic, {
+            type: 'line',
+            data: { 
+                labels: [], 
+                datasets: [{ 
+                    label: 'Visitas', 
+                    data: [], 
+                    borderColor: BRAND_PRIMARY, 
+                    backgroundColor: gradientTraffic, 
+                    borderWidth: 3, 
+                    tension: 0.4, 
+                    fill: true, 
+                    pointBackgroundColor: '#fff', 
+                    pointBorderColor: BRAND_PRIMARY, 
+                    pointBorderWidth: 2, 
+                    pointRadius: 4, 
+                    pointHoverRadius: 6 
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                animation: { duration: 2000, easing: 'easeOutQuart' }, 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    x: { grid: { display: false } }, 
+                    y: { beginAtZero: true, border: { display: false } } 
+                } 
+            }
+        });
+
+        // 2. CHART DISPOSITIVOS (DONA)
+        const ctxDevice = document.getElementById('deviceChart').getContext('2d');
+        deviceChart = new Chart(ctxDevice, {
+            type: 'doughnut',
+            data: { 
+                labels: ['Móvil', 'Escritorio', 'Tablet'], 
+                datasets: [{ 
+                    data: [0, 0, 0], 
+                    backgroundColor: [BRAND_PRIMARY, '#06b6d4', '#f59e0b'], 
+                    borderWidth: 0, 
+                    hoverOffset: 10 
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                cutout: '80%', 
+                plugins: { legend: { display: false } } 
+            }
+        });
+
+        // 3. CHART HORAS
+        const ctxHours = document.getElementById('hoursChart').getContext('2d');
+        hoursChart = new Chart(ctxHours, {
+            type: 'bar',
+            data: { 
+                labels: Array.from({length: 24}, (_, i) => i.toString().padStart(2, '0')), 
+                datasets: [{ 
+                    label: 'Visitas', 
+                    data: new Array(24).fill(0), 
+                    backgroundColor: '#f43f5e', 
+                    borderRadius: 4, 
+                    hoverBackgroundColor: '#fb7185' 
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, 
+                scales: { 
+                    x: { grid: { display: false }, ticks: { font: { size: 9 }, maxTicksLimit: 8 } }, 
+                    y: { display: false } 
+                } 
+            }
+        });
+
+        // --- FUNCIONES LÓGICAS ---
+        function changePeriod(period) {
+            currentPeriod = period;
+            ['day', 'week', 'month', 'year'].forEach(p => {
+                const btn = document.getElementById(`btn-${p}`);
+                if (p === period) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            cargarDatosReales();
+        }
+
+        function animarContador(idElemento, valorFinal) {
+            const elemento = document.getElementById(idElemento);
+            if (!elemento) return;
+            const valorActual = parseInt(elemento.innerText.replace(/,/g, '')) || 0;
+            const diferencia = valorFinal - valorActual;
+            if (diferencia === 0) return;
+            const duracion = 1500;
+            const pasos = 60;
+            const incremento = diferencia / pasos;
+            let actual = valorActual;
+            let contador = 0;
+            const timer = setInterval(() => {
+                contador++;
+                actual += incremento;
+                elemento.innerText = Math.floor(actual).toLocaleString();
+                if (contador >= pasos) {
+                    elemento.innerText = valorFinal.toLocaleString();
+                    clearInterval(timer);
+                }
+            }, duracion / pasos);
+        }
+
+        async function cargarDatosReales() {
+
+           const loadingUI = `
+        <div class="list-item" style="justify-content: center; opacity: 0.5; border-style: dashed;">
+            <span style="font-size: 0.8rem;">Cargando...</span>
+        </div>`;
+    
+    // Aplicamos carga a todos los contenedores relevantes
+    const containers = ['countriesContainer', 'deviceStatsContainer', 'citiesContainer', 'referrersContainer', 'osStatsContainer'];
+    containers.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = loadingUI;
+    });
+
+    try {
+        const lastUpdateEl = document.getElementById('lastUpdate');
+        if (lastUpdateEl) lastUpdateEl.innerText = "Sincronizando...";
+
+                const response = await fetch(`https://mi-api-analitica.elitemarketing-a94.workers.dev/api/stats?period=${currentPeriod}`);
+                const data = await response.json();
+
+                // KPIs y Textos
+                const totalClicks = data.top_links.reduce((a, b) => a + b.count, 0);
+                
+                animarContador('totalViews', data.total_views);
+                animarContador('uniqueVisitors', data.unique_visitors || 0);
+                animarContador('linkClicks', totalClicks);
+
+                // --- 🟢 CÁLCULO DEL CTR ---
+                const ctr = data.total_views > 0 ? ((totalClicks / data.total_views) * 100).toFixed(1) : 0;
+                const ctrBadge = document.getElementById('ctrBadge');
+                if (ctrBadge) {
+                    ctrBadge.innerText = `${ctr}% CTR`;
+                }
+
+                const trendEl = document.getElementById('viewsTrend');
+                const growth = data.views_growth || 0;
+                trendEl.innerText = (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%';
+                // Clases dinámicas según crecimiento
+                if(growth >= 0) {
+                    trendEl.className = 'badge badge-trend';
+                } else {
+                    trendEl.className = 'badge badge-trend down';
+                }
+
+                window.allLinksData = data.top_links;
+                window.allCountriesData = data.countries;
+                window.allCitiesData = data.top_cities;
+                window.allReferrersData = data.referrers;
+                
+                // Tabla Enlaces
+                const tableBody = document.getElementById('linksTableBody');
+                tableBody.innerHTML = data.top_links.slice(0, 5).map(link => `
+                    <tr>
+                        <td style="display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 6px; height: 6px; background: var(--primary); border-radius: 50%;"></span>
+                            <div style="display: flex; flex-direction: column;">
+                                <span style="font-weight: 600;">${formatearNombre(link.path)}</span>
+                                <span style="font-size: 10px; opacity: 0.6; font-family: monospace;">${link.path}</span>
+                            </div>
+                        </td>
+                        <td style="text-align: right; font-weight: 700; color: var(--primary); font-family: monospace;">${link.count}</td>
+                    </tr>
+                `).join('') || '<tr><td colspan="2" style="text-align: center; opacity: 0.5; padding: 2rem;">Sin datos de clics</td></tr>';
+
+                // 2. Tabla Ciudades
+                const citiesContainer = document.getElementById('citiesContainer');
+
+                if (data.top_cities && data.top_cities.length > 0) {
+                    const maxCityCount = Math.max(...data.top_cities.map(c => c.count));
+
+                    citiesContainer.innerHTML = data.top_cities.slice(0, 10).map(city => { 
+                        const porcentaje = (city.count / maxCityCount * 100).toFixed(1);
+                        return `
+                            <div class="list-item-city">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-size: 1.1rem;">${getFlag(city.country)}</span>
+                                        <span style="font-size: 0.85rem; font-weight: 500;">${city.city}</span>
+                                    </div>
+                                    <span style="font-size: 0.75rem; font-family: monospace; font-weight: 700; color: #ec4899;">${city.count}</span>
+                                </div>
+                                <div class="progress-bg">
+                                    <div class="country-bar progress-fill" 
+                                        style="width: 0%; background: linear-gradient(90deg, #ec4899, #f43f5e);" 
+                                        data-width="${porcentaje}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    const rectCiudades = citiesContainer.getBoundingClientRect();
+                    if (rectCiudades.top < window.innerHeight) {
+                        setTimeout(() => {
+                            citiesContainer.querySelectorAll('.country-bar').forEach(bar => {
+                                bar.style.width = bar.getAttribute('data-width');
+                            });
+                        }, 100);
+                    }
+
+                } else {
+                    citiesContainer.innerHTML = '<p style="text-align: center; opacity: 0.5; font-size: 0.8rem;">Sin datos de ciudad</p>';
+                }
+
+                // Países
+                const countriesContainer = document.getElementById('countriesContainer');
+                if (data.countries.length > 0) {
+                    countriesContainer.innerHTML = data.countries.map(c => {
+                        const porcentaje = (c.count / data.total_views * 100).toFixed(1);
+                        return `
+                            <div style="margin-bottom: 0.8rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 1.5rem;">${getFlag(c.country)}</span>
+                                        <span style="font-size: 0.9rem; font-weight: 500;">${c.country}</span>
+                                    </div>
+                                    <span style="font-family: monospace; font-size: 0.8rem;">${c.count}</span>
+                                </div>
+                                <div class="progress-bg">
+                                    <div class="country-bar progress-fill" style="width: 0%; background: linear-gradient(90deg, var(--primary), #06b6d4);" data-width="${porcentaje}%"></div>
+                                </div>
+                            </div>`;
+                    }).join('');
+                    setTimeout(() => {
+                    countriesContainer.querySelectorAll('.country-bar').forEach(bar => bar.style.width = bar.getAttribute('data-width'));
+                }, 100);
+                } else {
+                    countriesContainer.innerHTML = '<p style="text-align: center; opacity: 0.5;">Sin datos de geolocalización</p>';
+                }
+
+                // Actualizar Gráficos
+                trafficChart.data.labels = data.history.map(h => h.date);
+                trafficChart.data.datasets[0].data = data.history.map(h => h.count);
+                trafficChart.update();
+
+                if (data.peak_hours && data.peak_hours.length > 0) {
+                    const hoursData = new Array(24).fill(0);
+                    data.peak_hours.forEach(h => { if (!isNaN(parseInt(h.hour))) hoursData[parseInt(h.hour)] = h.count; });
+                    hoursChart.data.datasets[0].data = hoursData;
+                    hoursChart.update();
+                    
+                    const topHour = data.peak_hours.reduce((p, c) => (p.count > c.count) ? p : c);
+                    const badge = document.getElementById('peakHourBadge');
+                    if (badge) {
+                        badge.innerText = `🔥 ${topHour.hour}:00`;
+                        badge.classList.remove('hidden');
+                    }
+                }
+
+                // Referrers
+                document.getElementById('referrersContainer').innerHTML = (data.referrers && data.referrers.length > 0) ? data.referrers.map(r => {
+                const sourceMap = {
+                    'Instagram': { icon: 'fab fa-instagram', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' },
+                    'Facebook': { icon: 'fab fa-facebook', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.1)' },
+                    'TikTok': { icon: 'fab fa-tiktok', color: 'inherit', bg: 'rgba(255,255,255,0.1)' },
+                    'Google': { icon: 'fab fa-google', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)' },
+                    'X / Twitter': { icon: 'fab fa-x-twitter', color: 'inherit', bg: 'rgba(255,255,255,0.05)' },
+                    'YouTube': { icon: 'fab fa-youtube', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.1)' },
+                    'LinkedIn': { icon: 'fab fa-linkedin', color: '#1d4ed8', bg: 'rgba(29, 78, 216, 0.1)' },
+                    'Directo / Link': { icon: 'fas fa-link', color: 'inherit', bg: 'rgba(255,255,255,0.1)' }
+                };
+
+                const config = sourceMap[r.source] || { icon: 'fas fa-globe', color: 'inherit', bg: 'rgba(255,255,255,0.1)' };
+
+                return `
+                <div class="list-item">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 32px; height: 32px; border-radius: 8px; background: ${config.bg}; display: flex; align-items: center; justify-content: center; color: ${config.color};">
+                            <i class="${config.icon}"></i>
+                        </div>
+                        <span style="font-size: 0.9rem; font-weight: 500;">${r.source}</span>
+                    </div>
+                    <span style="font-family: monospace; font-weight: 700; opacity: 0.7;">${r.count}</span>
+                </div>`;
+            }).join('') : '<p style="text-align: center; opacity: 0.5;">Sin datos aún</p>';
+
+                // --- ACTUALIZACIÓN DE GRÁFICA DE DISPOSITIVOS ---
+                const mobile = data.devices.find(d => d.device_type === 'mobile')?.count || 0;
+                const desktop = data.devices.find(d => d.device_type === 'desktop')?.count || 0;
+                const tablet = data.devices.find(d => d.device_type === 'tablet')?.count || 0;
+
+                deviceChart.data.datasets[0].data = [mobile, desktop, tablet];
+                deviceChart.update('none'); 
+                deviceChart.reset(); 
+                dispositivoYaAnimado = false; 
+
+                // Sistemas Operativos
+                const osContainer = document.getElementById('osStatsContainer');
+                if (data.operating_systems.length > 0) {
+                    osContainer.innerHTML = data.operating_systems.map(os => `
+                    <div class="list-item" style="background: rgba(255,255,255,0.03);">
+                        <span style="display: flex; align-items: center; gap: 8px;">${getOsIcon(os.os)} ${os.os}</span>
+                        <span style="font-weight: 700;">${os.count}</span>
+                    </div>`).join('');
+                } else {
+                    osContainer.innerHTML = '<p style="text-align: center; opacity: 0.5;">Sin datos de SO</p>';
+                }
+
+                // Leyenda Dispositivos
+                const deviceStatsContainer = document.getElementById('deviceStatsContainer');
+                const deviceChartContainer = document.getElementById('deviceChartContainer');
+                
+                if (mobile + desktop + tablet > 0) {
+                    if (deviceChartContainer) deviceChartContainer.style.display = 'flex';
+                    
+                    deviceStatsContainer.innerHTML = `
+                        <div class="list-item"><span style="display: flex; align-items: center; gap: 8px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: ${BRAND_PRIMARY};"></div> Móvil</span><span style="font-weight: 700;">${mobile}</span></div>
+                        <div class="list-item"><span style="display: flex; align-items: center; gap: 8px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: #06b6d4;"></div> Escritorio</span><span style="font-weight: 700;">${desktop}</span></div>
+                        <div class="list-item"><span style="display: flex; align-items: center; gap: 8px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;"></div> Tablet</span><span style="font-weight: 700;">${tablet}</span></div>
+                    `;
+                } else {
+                    if (deviceChartContainer) deviceChartContainer.style.display = 'none';
+                    deviceStatsContainer.innerHTML = '<p style="text-align: center; opacity: 0.5;">Sin datos de dispositivos</p>';
+                }
+
+                // Sesión Media
+                const totalSegundos = Math.floor(data.avg_session_time || 0);
+                document.getElementById('avgSessionTime').innerText = `${Math.floor(totalSegundos / 60)}:${(totalSegundos % 60).toString().padStart(2, '0')}`;
+                const sBar = document.getElementById('sessionProgressBar');
+                sBar.setAttribute('data-width', `${Math.min((totalSegundos / 120) * 100, 100)}%`);
+                if (sBar.getBoundingClientRect().top < window.innerHeight) {
+                    sBar.style.width = '0%';
+                    setTimeout(() => sBar.style.width = sBar.getAttribute('data-width'), 100);
+                } else {
+                    sBar.style.width = '0%';
+                }
+
+                if (lastUpdateEl) {
+                    const now = new Date();
+                    lastUpdateEl.innerText = `Última carga: ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+                }
+
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        document.getElementById('refreshBtn').addEventListener('click', (e) => {
+            const svg = e.currentTarget.querySelector('svg');
+            // Animación rotación manual si no usamos Tailwind
+            svg.style.transition = 'transform 0.5s';
+            svg.style.transform = 'rotate(180deg)';
+            cargarDatosReales();
+            setTimeout(() => svg.style.transform = 'rotate(0deg)', 500);
+        });
+
+        //document.getElementById('linksTableBody').addEventListener('click', cargarDatosReales);
+        window.addEventListener('DOMContentLoaded', cargarDatosReales);
+
+        // Modales
+        function openLinksModal() {
+            const modalBody = document.getElementById('modalLinksTableBody');
+            modalBody.innerHTML = window.allLinksData.map(link => `
+                <tr>
+                    <td>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-weight: 600; color: var(--primary);">${formatearNombre(link.path)}</span>
+                            <span style="font-size: 11px; opacity: 0.6; font-family: monospace;">${link.path}</span>
+                        </div>
+                    </td>
+                    <td style="text-align: right; font-weight: 700; font-size: 1.1rem;">${link.count}</td>
+                </tr>
+            `).join('');
+            document.getElementById('linksModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLinksModal() {
+            document.getElementById('linksModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // --- MODAL UNIVERSAL PARA PAÍSES, FUENTES Y CIUDADES ---
+        function openGenericModal(type) {
+            const modal = document.getElementById('genericModal');
+            const title = document.getElementById('genericModalTitle');
+            const body = document.getElementById('genericModalBody');
+            const col1 = document.getElementById('col1Title');
+            const col2 = document.getElementById('col2Title');
+            
+            col2.innerText = "Visitas";
+            let data = [];
+            
+            if (type === 'countries') {
+                title.innerHTML = `<span>Todos los Países</span>`;
+                col1.innerText = 'Ubicación';
+                data = window.allCountriesData || [];
+                
+                body.innerHTML = data.map(item => `
+                    <tr>
+                        <td style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.5rem;">${getFlag(item.country)}</span>
+                            <span style="font-weight: 600;">${item.country}</span>
+                        </td>
+                        <td style="text-align: right; font-weight: 700; color: var(--primary); font-size: 1.1rem;">${item.count}</td>
+                    </tr>
+                `).join('');
+
+            } else if (type === 'referrers') {
+                title.innerHTML = `<span>Todas las Fuentes</span>`;
+                col1.innerText = 'Origen de Tráfico';
+                data = window.allReferrersData || [];
+
+                const sourceMap = {
+                    'Instagram': { icon: 'fab fa-instagram', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' },
+                    'Facebook': { icon: 'fab fa-facebook', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.1)' },
+                    'TikTok': { icon: 'fab fa-tiktok', color: 'inherit', bg: 'rgba(255,255,255,0.1)' },
+                    'Google': { icon: 'fab fa-google', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)' },
+                    'X / Twitter': { icon: 'fab fa-x-twitter', color: 'inherit', bg: 'rgba(255,255,255,0.05)' },
+                    'YouTube': { icon: 'fab fa-youtube', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.1)' },
+                    'LinkedIn': { icon: 'fab fa-linkedin', color: '#1d4ed8', bg: 'rgba(29, 78, 216, 0.1)' },
+                    'Directo / Link': { icon: 'fas fa-link', color: 'inherit', bg: 'rgba(255,255,255,0.1)' }
+                };
+
+                body.innerHTML = data.map(item => {
+                    const config = sourceMap[item.source] || { icon: 'fas fa-globe', color: 'inherit', bg: 'rgba(255,255,255,0.1)' };
+                    return `
+                    <tr>
+                        <td style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: ${config.bg}; display: flex; align-items: center; justify-content: center; color: ${config.color};">
+                                <i class="${config.icon}"></i>
+                            </div>
+                            <span style="font-weight: 600;">${item.source}</span>
+                        </td>
+                        <td style="text-align: right; font-weight: 700; color: #f97316; font-size: 1.1rem;">${item.count}</td>
+                    </tr>`;
+                }).join('');
+
+            } else if (type === 'cities') {
+                title.innerHTML = `<span>Todas las Ciudades</span>`;
+                col1.innerText = 'Ciudad';
+                data = window.allCitiesData || [];
+
+                body.innerHTML = data.map(item => `
+                    <tr>
+                        <td style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.4rem;">${getFlag(item.country)}</span>
+                            <div style="display: flex; flex-direction: column;">
+                                <span style="font-weight: 700;">${item.city}</span>
+                                <span style="font-size: 10px; opacity: 0.6;">${item.country}</span>
+                            </div>
+                        </td>
+                        <td style="text-align: right; font-weight: 700; color: #ec4899; font-size: 1.1rem;">${item.count}</td>
+                    </tr>
+                `).join('');
+            }
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeGenericModal() {
+            document.getElementById('genericModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // --- SCROLL OBSERVER ---
+        const observerOptions = { threshold: 0.3 };
+
+        const scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const card = entry.target;
+
+                    setTimeout(() => {
+                        // Animación Barra Sesión
+                        const bar = card.querySelector('.progress-bar-animate');
+                        if (bar && bar.getAttribute('data-width')) {
+                            bar.style.width = bar.getAttribute('data-width');
+                        }
+
+                        // Animación Países
+                        const bars = card.querySelectorAll('.country-bar');
+                        bars.forEach(b => b.style.width = b.getAttribute('data-width'));
+
+                        // Animación Dispositivos
+                        if (card.id === 'deviceCard' && !dispositivoYaAnimado && deviceChart) {
+                            deviceChart.update();
+                            dispositivoYaAnimado = true;
+                        }
+                    }, 300);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.glass-card').forEach(card => scrollObserver.observe(card));
+
+    </script>
+</body>
+</html>
