@@ -308,15 +308,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-/* --- SISTEMA DE RASTREO LINKEA (Analytics) --- */
+/* --- SISTEMA DE RASTREO LINKEA (Analytics Pro) --- */
 const TRACKING_URL = 'https://mi-api-analitica.elitemarketing-a94.workers.dev/api/track';
+let startTime = Date.now(); // 🟢 1. Iniciamos el reloj apenas carga el script
 
-function enviarEvento(tipo, ruta, dispositivo) {
+// 🟢 2. Añadimos el parámetro 'duracion' con valor por defecto 0
+function enviarEvento(tipo, ruta, dispositivo, duracion = 0) {
+    // Lógica de Usuarios Únicos...
+    const hoy = new Date().toISOString().split('T')[0];
+    const ultimaVisita = localStorage.getItem('linkea_last_v');
+    const esUnico = (tipo === 'pageview' && ultimaVisita !== hoy);
+
     fetch(TRACKING_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: tipo, path: ruta, device: dispositivo }),
+        body: JSON.stringify({ 
+            type: tipo, 
+            path: ruta, 
+            device: dispositivo,
+            isUnique: esUnico,
+            duration: duracion // 🟢 3. Enviamos los segundos al Worker
+        }),
         keepalive: true
+    }).then(res => {
+        if (res.ok && esUnico) localStorage.setItem('linkea_last_v', hoy);
     }).catch(err => console.log('Error tracking:', err));
 }
 
@@ -332,11 +347,10 @@ window.addEventListener('load', () => {
     enviarEvento('pageview', window.location.pathname, getDeviceType());
 });
 
-// 2. Rastrear Formulario Enviado (El "Lead")
+// 2. Rastrear Formulario Enviado (Lead)
 const formTracker = document.querySelector('.contact-form');
 if (formTracker) {
     formTracker.addEventListener('submit', () => {
-        // Esperamos 500ms para asegurar que la validación pasó (si no hay clase 'error')
         setTimeout(() => {
             if (!formTracker.querySelector('.error')) {
                 enviarEvento('click', '/formulario-enviado', getDeviceType());
@@ -345,24 +359,41 @@ if (formTracker) {
     });
 }
 
-// 3. Rastrear Clics (Chatbot, WhatsApp, Redes)
+// 3. Rastrear Clics (Chatbot Corregido, WhatsApp, Redes)
 document.body.addEventListener('click', (e) => {
     const target = e.target.closest('a, button'); 
     if (!target) return;
-
     const device = getDeviceType();
 
-    // A. Chatbot
+    // 🟢 4. CÓDIGO NUEVO AL FINAL DEL ARCHIVO: Detectar cuando se va el usuario
+window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        // Calculamos cuántos segundos pasaron desde que entró
+        const totalSegundos = Math.floor((Date.now() - startTime) / 1000);
+        
+        // Enviamos el evento especial de cierre
+        enviarEvento('session_end', window.location.pathname, getDeviceType(), totalSegundos);
+    }
+});
+
+    // Chatbot: Solo rastrea cuando se ABRE (no cuando se cierra)
     if (target.id === 'botToggler' || target.closest('#botToggler')) {
-        enviarEvento('click', '/accion-chatbot', device);
+        if (!document.body.classList.contains('show-chatbot')) {
+            enviarEvento('click', '/accion-chatbot', device);
+        }
     }
 
-    // B. WhatsApp (Cualquier enlace a wa.me)
+    // Otros enlaces (WhatsApp, Instagram, Facebook)
     if (target.href && target.href.includes('wa.me')) {
         enviarEvento('click', '/contacto-whatsapp', device);
     }
-
-    // C. Instagram y Facebook
     if (target.href && target.href.includes('instagram.com')) enviarEvento('click', '/red-instagram', device);
     if (target.href && target.href.includes('facebook.com')) enviarEvento('click', '/red-facebook', device);
+
+    // Portafolio
+    if (target.closest('.portfolio-item')) {
+        const titulo = target.closest('.portfolio-item').querySelector('h3')?.innerText || 'proyecto';
+        const slug = '/ver-' + titulo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, '-');
+        enviarEvento('click', slug, device);
+    }
 });
