@@ -342,6 +342,13 @@ function getDeviceType() {
     return 'desktop';
 }
 
+window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        const totalSegundos = Math.floor((Date.now() - startTime) / 1000);
+        enviarEvento('session_end', window.location.pathname, getDeviceType(), totalSegundos);
+    }
+});
+
 // 1. Rastrear Visita (Pageview)
 window.addEventListener('load', () => {
     enviarEvento('pageview', window.location.pathname, getDeviceType());
@@ -364,17 +371,6 @@ document.body.addEventListener('click', (e) => {
     const target = e.target.closest('a, button'); 
     if (!target) return;
     const device = getDeviceType();
-
-    // 🟢 4. CÓDIGO NUEVO AL FINAL DEL ARCHIVO: Detectar cuando se va el usuario
-window.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-        // Calculamos cuántos segundos pasaron desde que entró
-        const totalSegundos = Math.floor((Date.now() - startTime) / 1000);
-        
-        // Enviamos el evento especial de cierre
-        enviarEvento('session_end', window.location.pathname, getDeviceType(), totalSegundos);
-    }
-});
 
     // Chatbot: Solo rastrea cuando se ABRE (no cuando se cierra)
     if (target.id === 'botToggler' || target.closest('#botToggler')) {

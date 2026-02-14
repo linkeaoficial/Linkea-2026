@@ -92,7 +92,15 @@ export default {
         const topLinks = await env.DB.prepare(`SELECT path, SUM(count) as count FROM analytics_agg WHERE ${dateCondition} AND type = 'click' GROUP BY path ORDER BY count DESC`).all();
 
         // F. Historial para el Gráfico
-        const history = await env.DB.prepare(`SELECT date, SUM(count) as count FROM analytics_agg WHERE ${dateCondition} AND type = 'pageview' GROUP BY date ORDER BY date ASC`).all();
+        let historySQL = `SELECT date, SUM(count) as count FROM analytics_agg WHERE ${dateCondition} AND type = 'pageview' GROUP BY date ORDER BY date ASC`;
+
+        // 2. Si el periodo es "day", cambiamos la consulta para que devuelva HORAS en lugar de una sola FECHA
+        if (period === "day") {
+            historySQL = `SELECT (hour || ':00') as date, SUM(count) as count FROM analytics_agg WHERE ${dateCondition} AND type = 'pageview' GROUP BY hour ORDER BY hour ASC`;
+        }
+
+        // 3. Ejecutamos la consulta elegida
+        const history = await env.DB.prepare(historySQL).all();
 
         // G. Horas Punta
         const peakHours = await env.DB.prepare(`SELECT hour, SUM(count) as count FROM analytics_agg WHERE ${dateCondition} AND type = 'pageview' GROUP BY hour ORDER BY hour ASC`).all();
